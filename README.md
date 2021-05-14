@@ -5,7 +5,7 @@ BullETS is a Python library designed to help with the development of algorithmic
 ## Upcoming features
 
 - Retrieve stock data
-- Investment portfolio management
+- Trading portfolio management
 - Backtesting framework
 
 ## Installation
@@ -16,7 +16,7 @@ This section will assume you have **Python** installed, if not, you can download
 
 This section covers the installation process if you wish to **contribute** to the library. We recommend using a [virtual environment](https://docs.python.org/3/library/venv.html) to keep BullETS and its dependencies from interfering with your system installs.
 
-1. Clone the repo and go the library's root directory
+1. Clone the repo and go to the library's root directory
 ``` shell
 # Clone this repository
 git clone https://github.com/AlgoETS/BullETS
