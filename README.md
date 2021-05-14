@@ -44,7 +44,6 @@ source bot-env/bin/activate
 
 3. Install BullETS in editable mode (while the virtual environment is activated)
 ```shell
-# Run this command from the project's root directory
 pip install -e .
 ```
 
