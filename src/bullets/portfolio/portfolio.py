@@ -1,6 +1,5 @@
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction
-import datetime
 
 
 class Portfolio:
@@ -9,7 +8,7 @@ class Portfolio:
         Initializes the required variables for the Portfolio
 
         Args:
-            starting_balance (str): API key from FinancialModelPrep
+            start_balance (str): Balance of the portfolio
         """
         self.balance = start_balance
         self.holdings = {}
