@@ -1,9 +1,9 @@
+#“Data provided by Financial Modeling Prep
 import aiohttp
 
 __all__ = ["Client"]
 
 baseURL = 'https://financialmodelingprep.com'
-
 
 class Client:
     def __init__(self, token: str):

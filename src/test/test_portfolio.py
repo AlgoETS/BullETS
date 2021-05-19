@@ -1,6 +1,6 @@
 import unittest
 import datetime
-from bullets.portfolio import Portfolio
+from bullets import Portfolio
 
 
 class TestPortfolio(unittest.TestCase):

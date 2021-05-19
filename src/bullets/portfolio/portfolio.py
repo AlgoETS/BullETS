@@ -1,5 +1,5 @@
-from bullets.portfolio.holding import Holding
-from bullets.portfolio.transaction import Transaction
+from bullets import Holding
+from bullets import Transaction
 
 
 class Portfolio:
