@@ -15,42 +15,56 @@ class Portfolio:
         self.short_holdings = set()
         self.transactions = []
 
-    def buy(self, ticker: str, order_size: float, price: float, timestamp):
-        ticker = ticker.upper()
-        # Get holding
-        holding = self.holdings.get(ticker, Holding(ticker))
+    def buy(self, symbol: str, order_size: float, price: float, timestamp):
+        symbol = symbol.upper()
+
+        # Get holding else create a new one
+        holding = self.holdings.get(symbol, Holding(symbol))
 
         # Add transaction
-        self.transactions.append(Transaction(ticker, order_size, price, timestamp))
+        self.transactions.append(Transaction(symbol, order_size, price, timestamp))
 
-        order_price = price * - order_size
+        # Calculate total price of the order
+        order_price = price * order_size
 
+        # Calculates money that is being held by the shorted stock
         short_savings = 0
-        if ticker in self.short_holdings:
-            short_savings = self.holdings[ticker].nb_shares * self.holdings[ticker].avg_price
+        if symbol in self.short_holdings:
+            short_savings = -(self.holdings[symbol].nb_shares * self.get_current_price(symbol, timestamp))
+
         # Insufficient funds check
-        if self.get_balance(timestamp) + order_price - short_savings < 0:
-            raise ValueError("Insufficient Funds : " + ticker)
-        self.balance = self.balance + order_price
+        if self.get_balance(timestamp) - order_price + short_savings < 0:
+            raise ValueError("Insufficient Funds : " + symbol)
+        # Subtracts the price of the order from the balance
+        self.balance = self.balance - order_price
 
         # Create or update holding
         try:
+            # Tries to add shares to the holding
             holding.add_shares(order_size, price)
+            # If the holding is short
             if holding.nb_shares < 0:
-                self.short_holdings.add(ticker)
-            self.holdings[ticker] = holding
+                # Add short holding to short list
+                self.short_holdings.add(symbol)
+            # Adds the holding to the list
+            self.holdings[symbol] = holding
+        # Catches ZeroDivisionError if there are no more shares for the stock
         except ZeroDivisionError:
-            self.holdings.pop(ticker)
-            self.short_holdings.discard(ticker)
+            # Removes the holding
+            self.holdings.pop(symbol)
+            self.short_holdings.discard(symbol)
 
-    def sell(self, ticker: str, nb_shares: float, price: float, timestamp):
-        self.buy(ticker, -nb_shares, price, timestamp)
+    def sell(self, symbol: str, nb_shares: float, price: float, timestamp):
+        self.buy(symbol, -nb_shares, price, timestamp)
 
     def get_balance(self, date):
         balance = self.balance
-        for ticker in self.short_holdings:
-            holding = self.holdings.get(ticker)
-            balance = balance + holding.nb_shares * holding.avg_price + holding.nb_shares * holding.avg_price
+        for symbol in self.short_holdings:
+            holding = self.holdings.get(symbol)
+            # Subtract current price of shares
+            balance = balance + holding.nb_shares * self.get_current_price(holding.symbol, date)
         return balance
 
-
+    # TODO Get current price from client
+    def get_current_price(self, symbol, date):
+        return 1

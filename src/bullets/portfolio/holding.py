@@ -1,12 +1,12 @@
 class Holding:
-    def __init__(self, ticker: str):
+    def __init__(self, symbol: str):
         """
         Initializes the required variables for the Client
 
         Args:
             token (str): API key from FinancialModelPrep
         """
-        self.ticker = ticker
+        self.symbol = symbol
         self.nb_shares = 0
         self.avg_price = 0
 
