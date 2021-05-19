@@ -5,7 +5,6 @@ import json
 import asyncio
 
 
-
 class HistoricalPrice:
     def __init__(self, client: Client):
         """
@@ -40,17 +39,23 @@ class HistoricalPrice:
             result = asyncio.run(self.client.request(f'/api/v3/historical-chart/{resolution}/{symbol}', modifier))
         return json.loads(result)
 
-    def load_data(self, stock: Stock):
+    def load_data(self, stock: Stock, start_date = "", end_date = ""):
         """
         Retrieves the data from FMP
 
         Args:
             stock (Ticker): Ticker representing the desired stock
+            start_date (str): the date to start collecting data
+            end_date (str): the date to end collecting data
         """
-        result = self.get_data(stock.symbol, stock.resolution)
+        if stock.resolution == Resolution.daily:
+            result = self.get_data(stock.symbol, stock.resolution, start_date, end_date)["historical"]
+        else:
+            result = self.get_data(stock.symbol, stock.resolution, start_date, end_date)
+
         for entry in result:
             ticker = Ticker()
             date = entry["date"]
             entry.pop("date")
             ticker.set_data(entry)
-            stock.ticker[date] = ticker
+            stock.tickers[date] = ticker

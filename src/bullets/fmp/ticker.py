@@ -38,5 +38,17 @@ class Stock:
         """
         self.symbol = symbol
         self.resolution = resolution
-        self.ticker = {}
+        self.tickers = {}
 
+    def ticker(self, date: str):
+        """
+        Initializes the required variable for the Stock
+
+        Args:
+            date (str): instance of time to retrieve a ticker
+        """
+        if date not in self.tickers:
+            ticker = Ticker()
+            return ticker
+        else:
+            return self.tickers[date]
