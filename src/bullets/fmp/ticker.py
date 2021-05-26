@@ -1,30 +1,36 @@
 
 
 class Ticker:
-    def __init__(self):
+    __slots__ = ["open", "low", "high", "close", "volume", "price"]
+
+    def __init__(self, open=None, low=None, high=None,
+                 close=None, volume=None, price=None):
         """
         Initializes the required variable for the Ticker
         """
-        self.open = None
-        self.low = None
-        self.high = None
-        self.close = None
-        self.volume = None
-        self.price = None
+        self.open = open
+        self.low = low
+        self.high = high
+        self.close = close
+        self.volume = volume
+        self.price = price
 
-    def set_data(self, data: dict):
+    @classmethod
+    def set_data(cls, data: dict):
         """
         Sets the data of the ticker corresponding with the desired date and time
 
         Args:
             data (dict): datapoint of a ticker for a specific timeframe
         """
-        self.open = data["open"]
-        self.low = data["low"]
-        self.high = data["high"]
-        self.close = data["close"]
-        self.volume = data["volume"]
-        self.price = round((self.open + self.close)/2, 2)
+        open = round(data["open"], 2)
+        low = round(data["low"], 2)
+        high = round(data["high"], 2)
+        close = round(data["close"], 2)
+        volume = round(data["volume"], 2)
+        price = round((open + close)/2, 2)
+
+        return cls(open, low, high, close, volume, price)
 
 
 class Stock:
@@ -39,8 +45,16 @@ class Stock:
         self.symbol = symbol
         self.resolution = resolution
         self.tickers = {}
+        self.income_statement = {}
+        self.balance_sheet = {}
+        self.cash_flow = {}
 
-    def ticker(self, date: str):
+        self.mktCap = None
+        self.currency = ""
+        self.exchange = ""
+        self.sector = ""
+
+    def get_ticker(self, date: str) -> Ticker:
         """
         Initializes the required variable for the Stock
 
@@ -48,7 +62,15 @@ class Stock:
             date (str): instance of time to retrieve a ticker
         """
         if date not in self.tickers:
-            ticker = Ticker()
-            return ticker
+            return None
         else:
             return self.tickers[date]
+
+    def get_income_statement(self, year: int, period: str):
+
+        key = str(year) + " " + period
+
+        if key not in self.income_statement:
+            return None
+        else:
+            return self.income_statement[key]

@@ -1,13 +1,14 @@
 from bullets.fmp.historicalPrice import *
+from bullets.fmp.incomeStatements import *
 from bullets.resolution import *
 import datetime as dt
 
 APIkey = '090bebac8a76a19401c9bb5561482a2c'
-resolution = Resolution.daily
+resolution = Resolution.Min30
 company = "AAPL"
-date = str(dt.date(2019, 1, 23))# + " " + str(dt.time(12, 45, 0))
-start_date = str(dt.date(2018, 6, 18))
-end_date = str(dt.date(2020, 6, 18))
+date = str(dt.date(2018, 3, 15)) + " " + str(dt.time(11, 0, 0))
+start_date = str(dt.date(2018, 3, 12))
+end_date = str(dt.date(2019, 3, 12))
 
 
 class TestHistoricalPrice:
@@ -17,7 +18,7 @@ class TestHistoricalPrice:
         fmp = HistoricalPrice(me)
 
         fmp.load_data(apple, start_date, end_date)
-        print(apple.ticker(date).price)
+        print(apple.get_ticker(date).open)
 
 
 test = TestHistoricalPrice()

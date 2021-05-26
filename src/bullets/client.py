@@ -1,9 +1,7 @@
-#“Data provided by Financial Modeling Prep
+# Data provided by Financial Modeling Prep
 import aiohttp
 
 __all__ = ["Client"]
-
-baseURL = 'https://financialmodelingprep.com'
 
 
 class Client:
@@ -16,18 +14,17 @@ class Client:
         """
         self.token = token
 
-    async def request(self, endpoint: str, modifier = "") -> str:
+    async def request(self, url: str) -> str:
         """
         Performs a request on the requested endpoint at the base url.
         Args:
-            endpoint (str): Request endpoint e.g (/api/v3/profile/AAPL)
-            modifier (str): allows to filter the result e.g (from=2018-03-12&to=2019-03-12&)
+            url (str): address with endpoint to retrieve data
 
         Returns:
             JSON string with the response content
         """
-        if endpoint:
+        if url:
             async with aiohttp.ClientSession() as session:
-                async with session.get(f'{baseURL}{endpoint}?{modifier}apikey={self.token}') as response:
+                async with session.get(url) as response:
                     if response.status == 200:
                         return await response.text()
