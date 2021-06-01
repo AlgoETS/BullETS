@@ -9,6 +9,12 @@ class Resolution(str, Enum):
     Hour = "1hour"
     Hour4 = "4hour"
     Daily = "1day"
+
+    def __str__(self):
+        return self.value
+
+
+class Timespan(str, Enum):
     Quarterly = "quarterly"
     Yearly = "yearly"
 

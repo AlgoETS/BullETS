@@ -7,7 +7,7 @@ class Portfolio:
         """
         Initializes the required variables for the Portfolio
 
-        Args:
+        Args: b
             start_balance (str): Balance of the portfolio
         """
         self.balance = start_balance

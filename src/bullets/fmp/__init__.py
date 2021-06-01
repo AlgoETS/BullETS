@@ -1,1 +1,1 @@
-from bullets.fmp.historicalPrice import *
+from bullets.fmp.apiType import *

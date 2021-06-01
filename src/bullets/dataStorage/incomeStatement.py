@@ -9,8 +9,8 @@ class Expenses:
         """
         Initializes the required variable for the Expenses
 
-        Args:
-            data (dict): datapoint of a ticker for a specific timeframe
+        Args: datapoint of a ticker for a specific timeframe
+
         """
         self.research_development = data["researchAndDevelopmentExpenses"]
         self.general_administration = data["generalAndAdministrativeExpenses"]

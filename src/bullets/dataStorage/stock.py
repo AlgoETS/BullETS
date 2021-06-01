@@ -1,3 +1,7 @@
+from datetime import date
+from .incomeStatement import *
+from .balanceSheet import *
+from .cashFlow import *
 
 
 class Ticker:
@@ -54,23 +58,38 @@ class Stock:
         self.exchange = ""
         self.sector = ""
 
-    def get_ticker(self, date: str) -> Ticker:
+    def get_ticker(self, key_date: date) -> Ticker:
         """
         Initializes the required variable for the Stock
 
         Args:
-            date (str): instance of time to retrieve a ticker
+            key_date (str): instance of time to retrieve a ticker
         """
-        if date not in self.tickers:
-            return None
+        if key_date not in self.tickers:
+            return Ticker()
         else:
-            return self.tickers[date]
+            return self.tickers[key_date]
 
-    def get_income_statement(self, year: int, period: str):
-
+    def get_income_statement(self, year: int, period="FY") -> IncomeStatement:
         key = str(year) + " " + period
 
         if key not in self.income_statement:
             return None
         else:
             return self.income_statement[key]
+
+    def get_balance_sheet(self, year: int, period="FY") -> BalanceSheet:
+        key = str(year) + " " + period
+
+        if key not in self.balance_sheet:
+            return None
+        else:
+            return self.balance_sheet[key]
+
+    def get_cash_flow(self, year: int, period="FY") -> CashFlow:
+        key = str(year) + " " + period
+
+        if key not in self.cash_flow:
+            return None
+        else:
+            return self.cash_flow[key]
