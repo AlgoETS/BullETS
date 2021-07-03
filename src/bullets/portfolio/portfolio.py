@@ -1,10 +1,11 @@
+from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction
 
 
 class Portfolio:
 
-    def __init__(self, start_balance: float, data_source):
+    def __init__(self, start_balance: float, data_source: DataSourceInterface):
         """
         Initializes the required variables for the Portfolio
         Args:

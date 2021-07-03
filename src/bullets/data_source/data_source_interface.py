@@ -1,11 +1,11 @@
 from datetime import datetime
 
 
-class BaseData:
+class DataSourceInterface:
     def __init__(self):
         self.timestamp = None
 
-    def get_price(self):
+    def get_price(self, symbol: str):
         pass
 
 
