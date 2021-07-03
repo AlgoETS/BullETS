@@ -13,10 +13,13 @@ class Runner:
         if self.strategy is None:
             raise TypeError("No strategy was attached to the runner.")
 
+        # TODO Get time of each tick for the resolution and backtest interval
         data = self.data_source.get_daily_historical_price()
 
         for element in data:
+            # TODO Update date time of the data source and portfolio
             self.strategy.data = element
+            self.data_source.date = new_date
             self.strategy.on_resolution()
             print(f"{element.price}$ / {element.ticker}")
 
@@ -25,10 +28,3 @@ class Runner:
     def attach(self, strategy: bullets.strategy.Strategy):
         self.strategy = strategy
 
-    def buy(self, ticker: str, amount: float):
-        # TODO: Implement runner buy logic
-        print("We bought some stuff")
-
-    def sell(self, ticker: str, amount: float):
-        # TODO: Implement runner sell logic
-        print("We sold some stuff")

@@ -34,15 +34,6 @@ class Strategy:
     """
     #@abstractmethod
     def on_resolution(self):
-        print("Resolution")
+        self.datasource.get_price("AAPL")
 
-    """
-    """
-    def buy(self, ticker: str, amount: float):
-        self.runner.buy(ticker, amount)
-
-    """
-    """
-    def sell(self, ticker: str, amount: float):
-        self.runner.sell(ticker, amount)
 
