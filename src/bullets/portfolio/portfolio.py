@@ -3,54 +3,88 @@ from bullets.portfolio.transaction import Transaction
 
 
 class Portfolio:
+
     def __init__(self, start_balance: float):
         """
         Initializes the required variables for the Portfolio
-
         Args:
             start_balance (str): Balance of the portfolio
         """
-        self.balance = start_balance
+        self.cash_balance = start_balance
         self.holdings = {}
-        self.short_holdings = set()
         self.transactions = []
 
-    def buy(self, ticker: str, order_size: float, price: float, timestamp):
-        ticker = ticker.upper()
-        # Get holding
-        holding = self.holdings.get(ticker, Holding(ticker))
+    def market_order(self, symbol: str, nb_shares: float, timestamp):
+        """
+        Order a stock at market price
+        Args:
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+            timestamp: Time of the trade
+        Returns: The transaction. The status explains whether the transaction was successful
+        """
+        price = self.get_current_price(symbol, timestamp)
+        transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price, timestamp)
+        self.transactions.append(transaction)
+        if transaction.status == Transaction.STATUS_SUCCESSFUL:
+            self.__put_holding__(symbol, nb_shares, price)
+        return transaction
 
-        # Add transaction
-        self.transactions.append(Transaction(ticker, order_size, price, timestamp))
-
-        order_price = price * - order_size
-
-        short_savings = 0
-        if ticker in self.short_holdings:
-            short_savings = self.holdings[ticker].nb_shares * self.holdings[ticker].avg_price
-        # Insufficient funds check
-        if self.get_balance(timestamp) + order_price - short_savings < 0:
-            raise ValueError("Insufficient Funds : " + ticker)
-        self.balance = self.balance + order_price
-
-        # Create or update holding
-        try:
-            holding.add_shares(order_size, price)
-            if holding.nb_shares < 0:
-                self.short_holdings.add(ticker)
-            self.holdings[ticker] = holding
-        except ZeroDivisionError:
-            self.holdings.pop(ticker)
-            self.short_holdings.discard(ticker)
-
-    def sell(self, ticker: str, nb_shares: float, price: float, timestamp):
-        self.buy(ticker, -nb_shares, price, timestamp)
-
-    def get_balance(self, date):
-        balance = self.balance
-        for ticker in self.short_holdings:
-            holding = self.holdings.get(ticker)
-            balance = balance + holding.nb_shares * holding.avg_price + holding.nb_shares * holding.avg_price
+    def update_and_get_balance(self, timestamp):
+        """
+        Updates the current prices of the holdings and returns the total balance of the portfolio
+        Args:
+            timestamp: Time of the requested balance
+        Returns: Total balance of the portfolio
+        """
+        balance = self.cash_balance
+        for holding in self.holdings:
+            holding.current_price = self.get_current_price(holding.symbol, timestamp)
+            balance = balance + holding.nb_shares * holding.current_price
         return balance
 
+    def __validate_and_create_transaction__(self, symbol: str, nb_shares: float, price: float, timestamp):
+        """
+        Validates and creates a transaction
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+            price: Price per share
+            timestamp: Time of the trade
+        Returns: Transaction with a successful or failed status
+        """
+        if price is None:
+            status = Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND
+        else:
+            if self.cash_balance >= nb_shares * price:
+                self.cash_balance = self.cash_balance - nb_shares * price
+                status = Transaction.STATUS_SUCCESSFUL
+            else:
+                status = Transaction.STATUS_FAILED_INSUFFICIENT_FUNDS
+        return Transaction(symbol, nb_shares, price, timestamp, status)
 
+    def __put_holding__(self, symbol: str, nb_shares: float, price: float):
+        """
+        Creates, updates or deletes a holding based on the number of shares
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+            price: Price per share
+        """
+        holding = self.holdings.get(symbol, Holding(symbol))
+        nb_shares = holding.add_shares(nb_shares, price)
+        if nb_shares == 0:
+            self.holdings.pop(symbol)
+        else:
+            self.holdings[symbol] = holding
+
+    def get_current_price(self, symbol, timestamp):
+        """
+        Gets the price of a stock at a certain time
+        Args:
+            symbol: Symbol of the stock you want to buy
+            timestamp: Time of the trade
+        Returns: The price of the stock, and None if the stock wasn't found
+        """
+        return 1
