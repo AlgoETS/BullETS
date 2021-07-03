@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime
 from bullets.strategy import Strategy
 from bullets.runner import Runner
-from bullets.data.base import BaseData
+from bullets.data_source.base import BaseData
 
 
 class TestPortfolio(unittest.TestCase):

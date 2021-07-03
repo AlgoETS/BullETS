@@ -2,6 +2,7 @@ from abc import abstractmethod
 from enum import Enum
 from datetime import datetime
 from bullets.portfolio.portfolio import Portfolio
+from bullets.data_source.data_source_fmp import FmpDataSource
 import bullets.runner
 
 __all__ = ["Resolution", "Strategy"]
@@ -24,16 +25,21 @@ class Strategy:
         self.resolution = resolution
         self.start_time = start_time
         self.end_time = end_time
-        self.portfolio = Portfolio(starting_balance)
+        self.starting_balance = starting_balance
         self.runner = runner
         self.ticker = ticker
-        self.data = None  # Will be initialized by the runner later
+        self.data_source = FmpDataSource()
+        self.portfolio = Portfolio(starting_balance, self.data_source)
+        self.timestamp = None
 
     """
         Extend this method to perform an operation that will be run on every resolution.
     """
-    #@abstractmethod
+    @abstractmethod
     def on_resolution(self):
-        self.datasource.get_price("AAPL")
+        pass
 
-
+    def update_time(self, timestamp):
+        self.timestamp = timestamp
+        self.data_source.timestamp = timestamp
+        self.portfolio.timestamp = timestamp

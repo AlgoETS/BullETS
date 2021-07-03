@@ -4,7 +4,7 @@ from bullets.portfolio.transaction import Transaction
 
 class Portfolio:
 
-    def __init__(self, start_balance: float):
+    def __init__(self, start_balance: float, data_source):
         """
         Initializes the required variables for the Portfolio
         Args:
@@ -13,45 +13,42 @@ class Portfolio:
         self.cash_balance = start_balance
         self.holdings = {}
         self.transactions = []
+        self.timestamp = None
+        self.data_source = data_source
 
-    def market_order(self, symbol: str, nb_shares: float, timestamp):
+    def market_order(self, symbol: str, nb_shares: float):
         """
         Order a stock at market price
         Args:
-        Args:
             symbol: Symbol of the stock you want to buy
             nb_shares: Number of shares of the order
-            timestamp: Time of the trade
         Returns: The transaction. The status explains whether the transaction was successful
         """
-        price = self.get_current_price(symbol, timestamp)
-        transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price, timestamp)
+        price = self.data_source.get_price(symbol)
+        transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price)
         self.transactions.append(transaction)
         if transaction.status == Transaction.STATUS_SUCCESSFUL:
             self.__put_holding__(symbol, nb_shares, price)
         return transaction
 
-    def update_and_get_balance(self, timestamp):
+    def update_and_get_balance(self):
         """
         Updates the current prices of the holdings and returns the total balance of the portfolio
-        Args:
-            timestamp: Time of the requested balance
         Returns: Total balance of the portfolio
         """
         balance = self.cash_balance
         for holding in self.holdings:
-            holding.current_price = self.get_current_price(holding.symbol, timestamp)
+            holding.current_price = self.data_source.get_price(holding.symbol)
             balance = balance + holding.nb_shares * holding.current_price
         return balance
 
-    def __validate_and_create_transaction__(self, symbol: str, nb_shares: float, price: float, timestamp):
+    def __validate_and_create_transaction__(self, symbol: str, nb_shares: float, price: float):
         """
         Validates and creates a transaction
         Args:
             symbol: Symbol of the stock you want to buy
             nb_shares: Number of shares of the order
             price: Price per share
-            timestamp: Time of the trade
         Returns: Transaction with a successful or failed status
         """
         if price is None:
@@ -62,7 +59,7 @@ class Portfolio:
                 status = Transaction.STATUS_SUCCESSFUL
             else:
                 status = Transaction.STATUS_FAILED_INSUFFICIENT_FUNDS
-        return Transaction(symbol, nb_shares, price, timestamp, status)
+        return Transaction(symbol, nb_shares, price, self.timestamp, status)
 
     def __put_holding__(self, symbol: str, nb_shares: float, price: float):
         """
@@ -78,13 +75,3 @@ class Portfolio:
             self.holdings.pop(symbol)
         else:
             self.holdings[symbol] = holding
-
-    def get_current_price(self, symbol, timestamp):
-        """
-        Gets the price of a stock at a certain time
-        Args:
-            symbol: Symbol of the stock you want to buy
-            timestamp: Time of the trade
-        Returns: The price of the stock, and None if the stock wasn't found
-        """
-        return 1
