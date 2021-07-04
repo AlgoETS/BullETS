@@ -1,5 +1,5 @@
 from bullets.strategy import Strategy, Resolution
-import datetime
+from datetime import datetime, timedelta
 
 __all__ = ["Runner"]
 
@@ -32,5 +32,37 @@ class Runner:
             end_time: DateTime at which the backtest end
         Returns: List of tradeable datetimes given the interval and resolutions
         """
-        return [datetime.datetime(2020, 1, 1), datetime.datetime(2020, 1, 2)]
-        # TODO Get time of each tick in the backtest interval given the resolution
+        moments = []
+        current_time = start_time
+
+        while current_time != end_time:
+            if resolution == Resolution.DAILY:
+                current_time = current_time + timedelta(days=1)
+            elif resolution == Resolution.HOURLY:
+                current_time = current_time + timedelta(hours=1)
+            elif resolution == Resolution.MINUTE:
+                current_time = current_time + timedelta(minutes=1)
+
+            if self.is_market_open(current_time):
+                moments.append(current_time)
+
+        return moments
+
+    def is_market_open(self, time: datetime) -> bool:
+        """
+        Determines if the market is open at the specified time
+        Args:
+            time: Datetime to verify
+
+        Returns: True if the market is open, False if the market is closed
+
+        """
+        if time.weekday() <= 5:
+            return False
+        elif time.hour < 10 or time.hour > 16:
+            return False
+        elif time.hour == 16:
+            if time.minute > 0:
+                return False
+
+        return True
