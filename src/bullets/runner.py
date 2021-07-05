@@ -55,11 +55,10 @@ class Runner:
             time: Datetime to verify
 
         Returns: True if the market is open, False if the market is closed
-
         """
         if time.weekday() <= 5:
             return False
-        elif time.hour < 10 or time.hour > 16:
+        elif time.hour < 9.5 or time.hour > 16:
             return False
         elif time.hour == 16:
             if time.minute > 0:
