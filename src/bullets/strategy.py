@@ -26,8 +26,8 @@ class Strategy:
                  starting_balance: float,
                  data_source: DataSourceInterface):
         self.resolution = resolution
-        self.start_time = start_time
-        self.end_time = end_time
+        self.start_time = start_time  # TODO: Implement validation on strategy start_time
+        self.end_time = end_time  # TODO: Implement validation on strategy end_time
         self.starting_balance = starting_balance
         self.data_source = data_source
         self.portfolio = Portfolio(starting_balance, self.data_source)
