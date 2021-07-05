@@ -50,19 +50,23 @@ class Runner:
 
     def is_market_open(self, time: datetime) -> bool:
         """
-        Determines if the market is open at the specified time
+        Determines if the market is open at the specified time.
         Args:
             time: Datetime to verify
 
         Returns: True if the market is open, False if the market is closed
 
         """
+
+        # TODO: Determine if the date provided is a holiday
+
         if time.weekday() <= 5:
             return False
-        elif time.hour < 10 or time.hour > 16:
+        elif time.hour < 9 or time.hour > 16:
             return False
-        elif time.hour == 16:
-            if time.minute > 0:
-                return False
+        elif time.hour == 9 and time.minute < 30:
+            return False
+        elif time.hour == 16 and time.minute > 0:
+            return False
 
         return True
