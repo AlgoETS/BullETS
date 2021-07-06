@@ -43,26 +43,29 @@ class Runner:
             elif resolution == Resolution.MINUTE:
                 current_time = current_time + timedelta(minutes=1)
 
-            if self.is_market_open(current_time):
+            if self.is_market_open(current_time, resolution):
                 moments.append(current_time)
 
         return moments
 
-    def is_market_open(self, time: datetime) -> bool:
+    def is_market_open(self, time: datetime, resolution: Resolution) -> bool:
         """
         Determines if the market is open at the specified time
         Args:
+            resolution: Resolution used by the strategy
             time: Datetime to verify
 
         Returns: True if the market is open, False if the market is closed
         """
         if time.weekday() <= 5:
             return False
-        elif time.hour < 9 or time.hour > 16:
-            return False
-        elif time.hour == 16 and time.minute > 0:
-            return False
-        elif time.hour == 9 and time.minute < 30:
-            return False
+
+        if resolution != Resolution.DAILY:
+            if time.hour < 9 or time.hour > 16:
+                return False
+            elif time.hour == 16 and time.minute > 0:
+                return False
+            elif time.hour == 9 and time.minute < 30:
+                return False
 
         return True
