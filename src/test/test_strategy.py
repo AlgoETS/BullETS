@@ -10,8 +10,8 @@ from bullets.data_source.data_source_fmp import FmpDataSource
 
 class TestPortfolio(unittest.TestCase):
     RESOLUTION = Resolution.DAILY
-    START_TIME = datetime.datetime(2019, 3, 12)
-    END_TIME = datetime.datetime(2019, 3, 14)
+    START_TIME = datetime.datetime(2019, 3, 5)
+    END_TIME = datetime.datetime(2019, 4, 18)
     STARTING_BALANCE = 5000
     FMP_TOKEN = "878bd792d690ec6591d21a52de0b6774"
 
@@ -30,7 +30,6 @@ class TestStrategy(Strategy):
 
     def on_resolution(self):
         self.portfolio.market_order("AAPL", 5)
-        print(str(self.portfolio.timestamp) + " - Balance : " + str(self.portfolio.update_and_get_balance()))
 
 
 if __name__ == '__main__':

@@ -11,6 +11,7 @@ class Portfolio:
         Args:
             start_balance (str): Balance of the portfolio
         """
+        self.start_balance = start_balance
         self.cash_balance = start_balance
         self.holdings = {}
         self.transactions = []
@@ -27,6 +28,8 @@ class Portfolio:
         """
         price = self.data_source.get_price(symbol)
         transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price)
+        print(str(self.timestamp) + " - Market Order : " + symbol + ", " + str(nb_shares) +
+              " shares @ " + str(round(price, 2)) + "$ -> " + transaction.status)
         self.transactions.append(transaction)
         if transaction.status == Transaction.STATUS_SUCCESSFUL:
             self.__put_holding__(symbol, nb_shares, price)
@@ -42,6 +45,9 @@ class Portfolio:
             holding.current_price = self.data_source.get_price(holding.symbol)
             balance = balance + holding.nb_shares * holding.current_price
         return balance
+
+    def get_percentage_profit(self):
+        return round(self.update_and_get_balance() / self.start_balance * 100 - 100, 2)
 
     def __validate_and_create_transaction__(self, symbol: str, nb_shares: float, price: float):
         """

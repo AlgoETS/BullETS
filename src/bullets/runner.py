@@ -21,6 +21,10 @@ class Runner:
             self.strategy.update_time(moment)
             self.strategy.on_resolution()
 
+        print("Initial Cash : " + str(self.strategy.starting_balance))
+        print("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
+        print("Final Cash : " + str(self.strategy.portfolio.cash_balance))
+        print("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
         print("Backtest complete")
 
     def get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
