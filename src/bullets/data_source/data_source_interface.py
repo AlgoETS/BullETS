@@ -1,5 +1,15 @@
 from datetime import datetime
 
+__all__ = ["Resolution", "DataSourceInterface"]
+
+from enum import Enum
+
+
+class Resolution(Enum):
+    DAILY = "1day",
+    HOURLY = "1hour",
+    MINUTE = "1min"
+
 
 class DataSourceInterface:
     def __init__(self):
@@ -7,10 +17,3 @@ class DataSourceInterface:
 
     def get_price(self, symbol: str):
         pass
-
-
-class Tick:
-    def __init__(self, symbol: str, date_time: datetime, price: float):
-        self.symbol = symbol
-        self.date_time = date_time
-        self.price = price

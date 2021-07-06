@@ -1,4 +1,7 @@
-from bullets.data_source.data_source_interface import DataSourceInterface
+import datetime
+
+from bullets.data_source.data_source_fmp import FmpDataSource
+from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction
 
@@ -38,7 +41,7 @@ class Portfolio:
         Returns: Total balance of the portfolio
         """
         balance = self.cash_balance
-        for holding in self.holdings:
+        for holding in self.holdings.values():
             holding.current_price = self.data_source.get_price(holding.symbol)
             balance = balance + holding.nb_shares * holding.current_price
         return balance
