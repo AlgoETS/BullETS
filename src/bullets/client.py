@@ -31,6 +31,8 @@ class Client:
                 async with session.get(url) as response:
                     if response.status == 200:
                         return await response.text()
+                    else:
+                        print(response.text)
 
     def load_historical_price(self, stock: Stock, start_date: date, end_date: date):
         """

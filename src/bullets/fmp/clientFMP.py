@@ -19,13 +19,12 @@ class ClientFMP(Client):
 
     def load_historical_price(self, stock: Stock, start_date: date, end_date: date):
         self.api_call.type = ApiType.HistoricalPrice
-
         key_date = date(1, 1, 1)
         finished = False
         while not finished:
             url = self.api_call.get_data(stock.symbol, resolution=stock.resolution,
                                          start_date=start_date, end_date=end_date)
-            result = json.loads(asyncio.run(self.request(url)))
+            result = json.loads(asyncio.get_event_loop().run_until_complete(self.request(url)))
 
             if stock.resolution == Resolution.Daily:
                 data = result["historical"]
@@ -36,13 +35,14 @@ class ClientFMP(Client):
                 entry_date = entry["date"]
 
                 key_date = date(int(entry_date[0:4]), int(entry_date[5:7]), int(entry_date[8:10]))
-                key_datetime = datetime(int(entry_date[0:4]), int(entry_date[5:7]), int(entry_date[8:10]),
-                                        int(entry_date[11:13]), int(entry_date[14:16]), int(entry_date[17:19]))
+
                 ticker = Ticker.set_data(entry)
 
                 if stock.resolution == Resolution.Daily:
                     stock.tickers[key_date] = ticker
                 else:
+                    key_datetime = datetime(int(entry_date[0:4]), int(entry_date[5:7]), int(entry_date[8:10]),
+                                            int(entry_date[11:13]), int(entry_date[14:16]), int(entry_date[17:19]))
                     stock.tickers[key_datetime] = ticker
 
             finished = self.api_call.is_all_data_retrieved(start_date, key_date)
