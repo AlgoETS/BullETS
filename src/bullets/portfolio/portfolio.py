@@ -1,7 +1,4 @@
-import datetime
-
-from bullets.data_source.data_source_fmp import FmpDataSource
-from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
+from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction
 

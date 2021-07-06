@@ -57,7 +57,7 @@ class Runner:
 
         Returns: True if the market is open, False if the market is closed
         """
-        if time.weekday() <= 5:
+        if time.weekday() >= 5:
             return False
 
         if resolution != Resolution.DAILY:

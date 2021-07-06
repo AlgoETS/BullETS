@@ -1,7 +1,6 @@
 from abc import abstractmethod
-from datetime import datetime
+import datetime
 
-from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets.portfolio.portfolio import Portfolio
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 
@@ -39,9 +38,3 @@ class Strategy:
         self.timestamp = timestamp
         self.data_source.timestamp = timestamp
         self.portfolio.timestamp = timestamp
-
-if __name__ == '__main__':
-    portfolio = Portfolio(1000, FmpDataSource('878bd792d690ec6591d21a52de0b6774', Resolution.MINUTE))
-    portfolio.timestamp = datetime.datetime(2019, 3, 12, 15, 57)
-    portfolio.market_order('AAPL', 5)
-    portfolio.update_and_get_balance()
