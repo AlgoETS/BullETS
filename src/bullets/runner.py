@@ -58,10 +58,11 @@ class Runner:
         """
         if time.weekday() <= 5:
             return False
-        elif time.hour < 10 or time.hour > 16:
+        elif time.hour < 9 or time.hour > 16:
             return False
-        elif time.hour == 16:
-            if time.minute > 0:
-                return False
+        elif time.hour == 16 and time.minute > 0:
+            return False
+        elif time.hour == 9 and time.minute < 30:
+            return False
 
         return True
