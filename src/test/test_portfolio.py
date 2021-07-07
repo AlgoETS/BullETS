@@ -48,7 +48,6 @@ class TestPortfolio(unittest.TestCase):
         portfolio = Portfolio(1000, data_source)
         portfolio.timestamp = datetime.datetime(2019, 3, 12, 15, 57)
         data_source.timestamp = datetime.datetime(2019, 3, 12, 15, 57)
-
         portfolio.market_order('AAPL', 5)
         data_source.timestamp = datetime.datetime(2019, 3, 13, 15, 57)
         portfolio.timestamp = datetime.datetime(2019, 3, 13, 15, 57)

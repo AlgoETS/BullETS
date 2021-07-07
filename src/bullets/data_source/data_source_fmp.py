@@ -1,5 +1,7 @@
 import datetime
 import json
+import asyncio
+import aiohttp
 
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from urllib.request import urlopen
@@ -14,43 +16,53 @@ class FmpDataSource(DataSourceInterface):
         self.token = token
         self.resolution = resolution
 
-    def get_price(self, symbol: str):
+
+    def get_price(self, symbol: str, timestamp:datetime = None):
         """
         Gets the information of the stock at the current timestamp
         Args:
             symbol: Symbol of the stock
+            timestamp: Time of the data you want. If you want to the current time of the backtest, leave empty
         Returns: The stock information at the given timestamp
         """
-
+        timestamp = self.__get_timestamp__(timestamp)
         if self.resolution == Resolution.DAILY:
             url_resolution = "historical-price-full/"
         else:
             url_resolution = "historical-chart/" + str(self.resolution.value[0]) + "/"
 
-        interval = self.get_interval(self.timestamp, self.timestamp, self.resolution)
+        interval = self.__get_interval__(timestamp, timestamp, self.resolution)
 
         url = self.URL_BASE_FMP + url_resolution + symbol + "?" + interval + "&apikey=" + self.token
 
-        response = urlopen(url)
-        data = response.read().decode("utf-8")
-        result = json.loads(data, object_hook=lambda d: SimpleNamespace(**d))
+        response = self.request(url)
+
+        if response == "{ }":
+            return None
+
+        result = json.loads(response, object_hook=lambda d: SimpleNamespace(**d))
 
         if self.resolution == Resolution.DAILY:
             stock = result.historical[0]
         else:
-            stock = self.find_element_by_date(result)
+            stock = self.__find_element_by_date__(result, timestamp)
 
         return Stock(json_stock=stock).close
 
-    def get_interval(self, start_time, end_time, resolution):
+    def __get_interval__(self, start_time, end_time, resolution):
         return "from=" + str(start_time.date()) + "&to=" + str(end_time.date())
 
-    def find_element_by_date(self, intervals):
+    def __find_element_by_date__(self, intervals, timestamp):
         for interval in intervals:
             date = datetime.datetime.fromisoformat(interval.date)
-            if date == self.timestamp:
+            if date == timestamp:
                 return interval
 
+    def __get_timestamp__(self, timestamp: datetime = None):
+        if timestamp is None:
+            return self.timestamp
+        else:
+            return timestamp
 
 class Stock:
     def __init__(self, json_stock: dict):
@@ -60,15 +72,3 @@ class Stock:
         self.high = json_stock.high
         self.close = json_stock.close
         self.volume = json_stock.volume
-
-
-if __name__ == '__main__':
-    source = FmpDataSource("878bd792d690ec6591d21a52de0b6774", Resolution.MINUTE)
-    source.timestamp = datetime.datetime(2019, 3, 12, 15, 57)
-    stock = source.get_price("AAPL")
-    print(stock.date)
-    print(stock.open)
-    print(stock.low)
-    print(stock.high)
-    print(stock.close)
-    print(stock.volume)

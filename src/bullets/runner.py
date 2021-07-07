@@ -1,5 +1,6 @@
 from bullets.strategy import Strategy, Resolution
 from datetime import datetime, timedelta
+from bullets import logger
 
 __all__ = ["Runner"]
 
@@ -21,11 +22,16 @@ class Runner:
             self.strategy.update_time(moment)
             self.strategy.on_resolution()
 
-        print("Initial Cash : " + str(self.strategy.starting_balance))
-        print("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
-        print("Final Cash : " + str(self.strategy.portfolio.cash_balance))
-        print("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
-        print("Backtest complete")
+        logger.info("=========== Transactions ===========")
+        for transaction in self.strategy.portfolio.transactions:
+            logger.info(str(transaction.timestamp) + " - " + transaction.symbol + ", " + str(transaction.nb_shares) +
+            " shares | " + transaction.status)
+
+        logger.info("Initial Cash : " + str(self.strategy.starting_balance))
+        logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
+        logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
+        logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
+        logger.info("Backtest complete")
 
     def get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         """

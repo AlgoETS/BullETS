@@ -1,6 +1,7 @@
 from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction
+from bullets import logger
 
 
 class Portfolio:
@@ -28,8 +29,6 @@ class Portfolio:
         """
         price = self.data_source.get_price(symbol)
         transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price)
-        print(str(self.timestamp) + " - Market Order : " + symbol + ", " + str(nb_shares) +
-              " shares @ " + str(round(price, 2)) + "$ -> " + transaction.status)
         self.transactions.append(transaction)
         if transaction.status == Transaction.STATUS_SUCCESSFUL:
             self.__put_holding__(symbol, nb_shares, price)
