@@ -1,4 +1,5 @@
 import logging
+import sys
 from enum import Enum
 
 
@@ -9,10 +10,33 @@ class LogLevels(Enum):
     DEBUG = logging.DEBUG
 
 
+class CustomFormatter(logging.Formatter):
+    default_fmt = "BullETS - %(levelname)s: %(message)s"
+    error_fmt = "\u001b[31m%(levelname)s: %(message)s\u001b[0m"
+    warning_fmt = "\u001b[33m%(levelname)s: %(message)s\u001b[0m"
+    info_fmt = "\u001b[36m%(message)s\u001b[0m"
+    debug_fmt = "\u001b[35m%(message)s\u001b[0m"
+
+    def format(self, record):
+
+        if record.levelno == LogLevels.ERROR.value:
+            self._style._fmt = CustomFormatter.error_fmt
+        elif record.levelno == LogLevels.WARNING.value:
+            self._style._fmt = CustomFormatter.warning_fmt
+        elif record.levelno == LogLevels.INFO.value:
+            self._style._fmt = CustomFormatter.info_fmt
+        elif record.levelno == LogLevels.DEBUG.value:
+            self._style._fmt = CustomFormatter.debug_fmt
+        else:
+            self._style._fmt = CustomFormatter.default_fmt
+
+        return super().format(record)
+
+
 LOG_LEVEL = LogLevels.INFO
 LOGGER = logging.getLogger("BullETS")
-HANDLER = logging.StreamHandler()
-FORMATTER = logging.Formatter("BullETS - %(levelname)s: %(message)s")
+HANDLER = logging.StreamHandler(sys.stdout)
+FORMATTER = CustomFormatter()
 
 HANDLER.setLevel(LOG_LEVEL.value)
 HANDLER.setFormatter(FORMATTER)
