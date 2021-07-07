@@ -1,1 +1,1 @@
-from .portfolio import *
+from bullets.portfolio import *

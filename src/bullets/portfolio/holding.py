@@ -20,6 +20,7 @@ class Holding:
         """
         new_nb_shares = self.nb_shares + nb_shares
         if new_nb_shares == 0:
+            self.avg_price = 0
             return 0
         self.avg_price = (self.avg_price * self.nb_shares + price * nb_shares)/new_nb_shares
         self.nb_shares = new_nb_shares
