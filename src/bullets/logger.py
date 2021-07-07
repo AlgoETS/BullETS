@@ -18,7 +18,6 @@ class CustomFormatter(logging.Formatter):
     debug_fmt = "\u001b[35m%(message)s\u001b[0m"
 
     def format(self, record):
-
         if record.levelno == LogLevels.ERROR.value:
             self._style._fmt = CustomFormatter.error_fmt
         elif record.levelno == LogLevels.WARNING.value:
