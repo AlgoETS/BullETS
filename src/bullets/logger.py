@@ -9,7 +9,7 @@ class LogLevels(Enum):
     DEBUG = logging.DEBUG
 
 
-LOG_LEVEL = LogLevels.WARNING
+LOG_LEVEL = LogLevels.INFO
 LOGGER = logging.getLogger("BullETS")
 HANDLER = logging.StreamHandler()
 FORMATTER = logging.Formatter("BullETS - %(levelname)s: %(message)s")
