@@ -18,7 +18,7 @@ class TestPortfolio(unittest.TestCase):
                                 start_time=self.START_TIME,
                                 end_time=self.END_TIME,
                                 starting_balance=self.STARTING_BALANCE,
-                                data_source=FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+                                data_source=FmpDataSource(self.FMP_TOKEN, self.RESOLUTION, "AAPL", self.START_TIME, self.END_TIME))
         runner = Runner(strategy)
         runner.start()
         self.assertEqual(5000, strategy.portfolio.start_balance)

@@ -27,7 +27,7 @@ class Portfolio:
             nb_shares: Number of shares of the order
         Returns: The transaction. The status explains whether the transaction was successful
         """
-        price = self.data_source.get_price(symbol)
+        price = self.data_source.get_price()
         transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price)
         self.transactions.append(transaction)
         if transaction.status == Transaction.STATUS_SUCCESSFUL:
@@ -41,7 +41,7 @@ class Portfolio:
         """
         balance = self.cash_balance
         for holding in self.holdings.values():
-            holding.current_price = self.data_source.get_price(holding.symbol)
+            holding.current_price = self.data_source.get_price()
             balance = balance + holding.nb_shares * holding.current_price
         return balance
 
