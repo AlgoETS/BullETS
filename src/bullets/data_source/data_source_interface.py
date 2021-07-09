@@ -20,6 +20,9 @@ class DataSourceInterface:
     def get_price(self, symbol: str, timestamp:datetime = None):
         pass
 
+    def get_market_open_close(self):
+        pass
+
     @staticmethod
     def request(url: str) -> str:
         """

@@ -1,4 +1,5 @@
 from bullets.strategy import Strategy, Resolution
+from bullets.data_source.data_source_fmp import FmpDataSource
 from datetime import datetime, timedelta
 from bullets import logger
 
@@ -8,6 +9,7 @@ __all__ = ["Runner"]
 class Runner:
     def __init__(self, strategy: Strategy):
         self.strategy = strategy
+        self.holidays = None
 
     def start(self):
         """
@@ -77,5 +79,11 @@ class Runner:
                 return False
             elif time.hour == 9 and time.minute < 30:
                 return False
+
+        if self.holidays == None:
+            self.holidays = self.strategy.data_source.get_market_open_close()
+        test_date = datetime(time.year, time.month, time.day, 0, 0, 0)
+        if test_date in self.holidays:
+            return False
 
         return True
