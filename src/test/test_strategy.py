@@ -1,15 +1,15 @@
 import unittest
-import datetime
 
 from bullets.strategy import Strategy, Resolution
 from bullets.runner import Runner
 from bullets.data_source.data_source_fmp import FmpDataSource
+from datetime import datetime
 
 
 class TestPortfolio(unittest.TestCase):
     RESOLUTION = Resolution.DAILY
-    START_TIME = datetime.datetime(2019, 3, 5)
-    END_TIME = datetime.datetime(2019, 4, 22)
+    START_TIME = datetime(2019, 3, 5)
+    END_TIME = datetime(2019, 4, 22)
     STARTING_BALANCE = 5000
     FMP_TOKEN = "878bd792d690ec6591d21a52de0b6774"
 
@@ -26,6 +26,30 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(120.71247499999933, strategy.portfolio.cash_balance)
         self.assertEqual(9.79, strategy.portfolio.get_percentage_profit())
         self.assertEqual(34, len(strategy.portfolio.transactions))
+
+    def test_strategy_none_date(self):
+        self.assertRaisesRegex(TypeError, "Invalid strategy date type", TestStrategy,
+                               self.RESOLUTION, None, None, self.STARTING_BALANCE,
+                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+
+    def test_strategy_invalid_date(self):
+        self.assertRaisesRegex(ValueError, "Strategy start time has to be before end time", TestStrategy,
+                               self.RESOLUTION, self.END_TIME, self.START_TIME, self.STARTING_BALANCE,
+                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+
+    def test_strategy_none_resolution(self):
+        self.assertRaisesRegex(TypeError, "Invalid strategy resolution type", TestStrategy,
+                               None, self.START_TIME, self.END_TIME, self.STARTING_BALANCE,
+                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+
+    def test_strategy_none_data_source(self):
+        self.assertRaisesRegex(TypeError, "Invalid strategy data source type", TestStrategy,
+                               self.RESOLUTION, self.START_TIME, self.END_TIME, self.STARTING_BALANCE, None)
+
+    def test_strategy_invalid_balance(self):
+        self.assertRaisesRegex(ValueError, "Strategy starting balance should be positive", TestStrategy,
+                               self.RESOLUTION, self.START_TIME, self.END_TIME, self.STARTING_BALANCE * -1,
+                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
 
 
 class TestStrategy(Strategy):
