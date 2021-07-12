@@ -27,6 +27,7 @@ class Runner:
             logger.info(str(transaction.timestamp) + " - " + transaction.symbol + ", " + str(transaction.nb_shares) +
             " shares | " + transaction.status)
 
+        logger.info("\n=========== Final Stats ===========")
         logger.info("Initial Cash : " + str(self.strategy.starting_balance))
         logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
         logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
