@@ -1,5 +1,4 @@
 from bullets.strategy import Strategy, Resolution
-from bullets.data_source.data_source_fmp import FmpDataSource
 from datetime import datetime, timedelta
 from bullets import logger
 
@@ -83,6 +82,7 @@ class Runner:
         if self.holidays == None:
             self.holidays = self.strategy.data_source.get_market_open_close()
         test_date = datetime(time.year, time.month, time.day, 0, 0, 0)
+
         if test_date in self.holidays:
             return False
 

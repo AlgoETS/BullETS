@@ -1,7 +1,6 @@
 import datetime
 import json
-import asyncio
-import aiohttp
+import math
 
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.data_source.recorded_data import *
@@ -16,7 +15,7 @@ class FmpDataSource(DataSourceInterface):
         self.resolution = resolution
         self.stocks = {}
 
-    def store_price_points(self, symbol: str, timestamp: datetime, limit: int = 1000):
+    def store_price_points(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None, limit: int = 1000):
         if symbol in self.stocks:
             stock = self.stocks[symbol]
         else:
@@ -26,11 +25,23 @@ class FmpDataSource(DataSourceInterface):
             url_resolution = "historical-price-full/"
         else:
             url_resolution = "historical-chart/" + str(self.resolution.value[0]) + "/"
+
+        if end_date == None:
+            nb_entree = limit
+            if self.resolution == Resolution.HOURLY:
+                nb_entree = math.ceil(nb_entree/6)
+            elif self.resolution == Resolution.MINUTE:
+                nb_entree = math.ceil(nb_entree/390)
+
+            end_date = start_date + datetime.timedelta(days=nb_entree)
+            if end_date > datetime.date.today():
+                end_date = datetime.date.today()
+
+        current_end_date = end_date
         finished = False
-        nb_entries = limit
 
         while not finished:
-            interval = "from=" + str(timestamp) + "&limit=" + str(nb_entries)
+            interval = "from=" + str(start_date) + "&to=" + str(current_end_date)
             url = self.URL_BASE_FMP + url_resolution + symbol + "?" + interval + "&apikey=" + self.token
             response = self.request(url)
 
@@ -42,6 +53,8 @@ class FmpDataSource(DataSourceInterface):
             else:
                 data = result
 
+            first_date = current_end_date
+
             for entry in data:
                 price_point = PricePoint(entry)
                 if self.resolution == Resolution.DAILY:
@@ -50,10 +63,10 @@ class FmpDataSource(DataSourceInterface):
                     stock_date = datetime.datetime.strptime(price_point.date, "%Y-%m-%d %H:%M:%S")
 
                 stock.price_points[stock_date] = price_point
+                first_date = stock_date.date()
 
-            nb_entries -= len(data)
-
-            if nb_entries <= 0:
+            current_end_date = first_date
+            if first_date <= start_date:
                 finished = True
 
         self.stocks[symbol] = stock
@@ -87,7 +100,7 @@ class FmpDataSource(DataSourceInterface):
             if date in stock.price_points:
                 return stock.price_points[date].close
 
-        self.store_price_points(symbol, datetime.date(date.year, date.month, date.day))
+        self.store_price_points(symbol, date.date())
 
         return self.stocks[symbol].price_points[date].close
 
