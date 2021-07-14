@@ -1,3 +1,4 @@
+from bullets.portfolio.transaction import Transaction
 from bullets.strategy import Strategy, Resolution
 from datetime import datetime, timedelta
 from bullets import logger
@@ -27,6 +28,7 @@ class Runner:
             logger.info(str(transaction.timestamp) + " - " + transaction.symbol + ", " + str(transaction.nb_shares) +
             " shares | " + transaction.status)
 
+        self.update_final_timestamp()
         logger.info("\n=========== Final Stats ===========")
         logger.info("Initial Cash : " + str(self.strategy.starting_balance))
         logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
@@ -80,3 +82,16 @@ class Runner:
                 return False
 
         return True
+
+    def update_final_timestamp(self):
+        """
+        Changes the current timestamp to the last timestamp where we have stock info to be able to calculate final stats
+        """
+        final_timestamp = self.strategy.start_time
+        for transaction in self.strategy.portfolio.transactions:
+            if transaction.status != Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND \
+                    and transaction.timestamp > final_timestamp:
+                final_timestamp = transaction.timestamp
+        self.strategy.update_time(final_timestamp)
+
+
