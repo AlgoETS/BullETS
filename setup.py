@@ -15,6 +15,8 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     version='0.0.1',
+    license='Apache 2.0',
+    python_requires='>=3.7',
     url='https://github.com/AlgoETS/BullETS',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
