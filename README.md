@@ -1,5 +1,7 @@
 # BullETS
 
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/AlgoETS/BullETS/Build/main?label=Checks%20%28main%29)
+
 BullETS is a Python library designed to help with the development of algorithmic trading strategies.
 
 ## Upcoming features
@@ -48,5 +50,5 @@ pip install -e .
 ```
 
 4. Setup environment variables 
-   4.1 Make a copy of the `.env.sample` file and name it `.env`
-   4.2 Replace the required values inside the `.env` file
+   1. Make a copy of the `.env.sample` file and name it `.env`
+   2. Replace the required values inside the `.env` file
