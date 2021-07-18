@@ -1,3 +1,4 @@
+import os
 import unittest
 
 from bullets.strategy import Strategy, Resolution
@@ -11,7 +12,7 @@ class TestPortfolio(unittest.TestCase):
     START_TIME = datetime(2019, 3, 5)
     END_TIME = datetime(2019, 4, 22)
     STARTING_BALANCE = 5000
-    FMP_TOKEN = "878bd792d690ec6591d21a52de0b6774"
+    FMP_TOKEN = os.getenv("FMP_TOKEN")
 
     def test_strategy(self):
         strategy = TestStrategy(resolution=self.RESOLUTION,
