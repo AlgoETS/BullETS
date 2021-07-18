@@ -47,3 +47,6 @@ source bot-env/bin/activate
 pip install -e .
 ```
 
+4. Setup environment variables 
+   4.1 Make a copy of the `.env.sample` file and name it `.env`
+   4.2 Replace the required values inside the `.env` file
