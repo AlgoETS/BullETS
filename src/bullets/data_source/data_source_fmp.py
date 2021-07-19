@@ -1,10 +1,7 @@
 import datetime
 import json
-import asyncio
-import aiohttp
 
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
-from urllib.request import urlopen
 from types import SimpleNamespace
 
 
@@ -49,6 +46,13 @@ class FmpDataSource(DataSourceInterface):
 
         return Stock(json_stock=stock).close
 
+    def get_remaining_calls(self) -> int:
+        body = {'data': {'key': self.token}}
+        response = self.request(url="https://europe-west1-fmpdev-1d3ca.cloudfunctions.net/getRemainingCalls",
+                                method="POST", body=body)
+
+        return int(json.loads(response)['result'])
+
     def __get_interval__(self, start_time, end_time, resolution):
         return "from=" + str(start_time.date()) + "&to=" + str(end_time.date())
 
@@ -63,6 +67,7 @@ class FmpDataSource(DataSourceInterface):
             return self.timestamp
         else:
             return timestamp
+
 
 class Stock:
     def __init__(self, json_stock: dict):

@@ -21,21 +21,23 @@ class DataSourceInterface:
         pass
 
     @staticmethod
-    def request(url: str) -> str:
+    def request(url: str, method: str = "GET", body=None) -> str:
         """
         Performs a request on the requested endpoint at the base url.
         Args:
             url (str): address with endpoint to retrieve data
+            method (str): method type to use to send request
+            body: json data to send in the body
 
         Returns:
             JSON string with the response content
         """
 
-        async def fetch(url: str) -> str:
+        async def fetch() -> str:
             if url:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as response:
+                    async with session.request(url=url, method=method, json=body) as response:
                         if response.status == 200:
                             return await response.text()
 
-        return asyncio.get_event_loop().run_until_complete(fetch(url))
+        return asyncio.get_event_loop().run_until_complete(fetch())
