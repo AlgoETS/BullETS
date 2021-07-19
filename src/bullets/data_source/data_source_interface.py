@@ -26,7 +26,7 @@ class DataSourceInterface:
         Performs a request on the requested endpoint at the base url.
         Args:
             url (str): address with endpoint to retrieve data
-            method (str): method type to use to send request (POST or GET)
+            method (str): method type to use to send request
             body: json data to send in the body
 
         Returns:
