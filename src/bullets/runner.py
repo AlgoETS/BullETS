@@ -18,6 +18,8 @@ class Runner:
         if self.strategy is None:
             raise TypeError("No strategy was attached to the runner.")
 
+        logger.info("=========== Backtest started ===========")
+
         moments = self.get_moments(self.strategy.resolution, self.strategy.start_time, self.strategy.end_time)
 
         for moment in moments:
@@ -78,18 +80,13 @@ class Runner:
         Logs all the statistics necessary to see the backtest performance
         """
         self.update_final_timestamp()
-        logger.info("=========== Transactions ===========")
-        for transaction in self.strategy.portfolio.transactions:
-            logger.info(str(transaction.timestamp) + " - " + transaction.symbol + ", " + str(transaction.nb_shares) +
-                        " shares | " + transaction.status)
-        logger.info("\n=========== Final Stats ===========")
+        logger.info("=========== Backtest complete ===========")
         logger.info("Initial Cash : " + str(self.strategy.starting_balance))
         logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
         logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
         logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
         if isinstance(self.strategy.data_source, FmpDataSource):
             logger.info("Remaining FMP Calls :  " + str(self.strategy.data_source.get_remaining_calls()))
-        logger.info("Backtest complete")
 
     def update_final_timestamp(self):
         """

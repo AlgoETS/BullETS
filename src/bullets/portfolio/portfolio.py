@@ -31,6 +31,8 @@ class Portfolio:
         transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price)
         self.transactions.append(transaction)
         if transaction.status == Transaction.STATUS_SUCCESSFUL:
+            logger.info("Market order made: " + str(transaction.timestamp) + " - " + transaction.symbol +
+                        " - " + str(transaction.nb_shares) + " shares - " + str(transaction.price) + "$")
             self.__put_holding__(symbol, nb_shares, price)
         return transaction
 
