@@ -1,4 +1,6 @@
+from bullets.portfolio.transaction import Transaction
 from bullets.strategy import Strategy, Resolution
+from bullets.data_source.data_source_fmp import FmpDataSource
 from datetime import datetime, timedelta
 from bullets import logger
 
@@ -23,16 +25,7 @@ class Runner:
             self.strategy.update_time(moment)
             self.strategy.on_resolution()
 
-        logger.info("=========== Transactions ===========")
-        for transaction in self.strategy.portfolio.transactions:
-            logger.info(str(transaction.timestamp) + " - " + transaction.symbol + ", " + str(transaction.nb_shares) +
-            " shares | " + transaction.status)
-
-        logger.info("Initial Cash : " + str(self.strategy.starting_balance))
-        logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
-        logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
-        logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
-        logger.info("Backtest complete")
+        self.post_backtest_log()
 
     def get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         """
@@ -87,3 +80,32 @@ class Runner:
             return False
 
         return True
+
+    def post_backtest_log(self):
+        """
+        Logs all the statistics necessary to see the backtest performance
+        """
+        self.update_final_timestamp()
+        logger.info("=========== Transactions ===========")
+        for transaction in self.strategy.portfolio.transactions:
+            logger.info(str(transaction.timestamp) + " - " + transaction.symbol + ", " + str(transaction.nb_shares) +
+                        " shares | " + transaction.status)
+        logger.info("\n=========== Final Stats ===========")
+        logger.info("Initial Cash : " + str(self.strategy.starting_balance))
+        logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
+        logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
+        logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
+        if isinstance(self.strategy.data_source, FmpDataSource):
+            logger.info("Remaining FMP Calls :  " + str(self.strategy.data_source.get_remaining_calls()))
+        logger.info("Backtest complete")
+
+    def update_final_timestamp(self):
+        """
+        Changes the current timestamp to the last timestamp where we have stock info to be able to calculate final stats
+        """
+        final_timestamp = self.strategy.start_time
+        for transaction in self.strategy.portfolio.transactions:
+            if transaction.status != Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND \
+                    and transaction.timestamp > final_timestamp:
+                final_timestamp = transaction.timestamp
+        self.strategy.update_time(final_timestamp)

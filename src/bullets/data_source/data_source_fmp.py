@@ -6,6 +6,7 @@ from bullets.data_source.data_source_interface import DataSourceInterface, Resol
 from bullets.data_source.recorded_data import *
 
 
+
 class FmpDataSource(DataSourceInterface):
     URL_BASE_FMP = 'https://financialmodelingprep.com/api/v3/'
 
@@ -99,8 +100,16 @@ class FmpDataSource(DataSourceInterface):
             stock = self.stocks[symbol]
             if date in stock.price_points:
                 return stock.price_points[date].close
-
         self.store_price_points(symbol, date.date())
+        
+    def get_remaining_calls(self) -> int:
+        body = {'data': {'key': self.token}}
+        response = self.request(url="https://europe-west1-fmpdev-1d3ca.cloudfunctions.net/getRemainingCalls",
+                                method="POST", body=body)
+
+        return int(json.loads(response)['result'])
+
+    def __get_interval__(self, start_time, end_time, resolution):
+        return "from=" + str(start_time.date()) + "&to=" + str(end_time.date())
 
         return self.stocks[symbol].price_points[date].close
-
