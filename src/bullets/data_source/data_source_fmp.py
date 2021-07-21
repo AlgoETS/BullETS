@@ -16,7 +16,8 @@ class FmpDataSource(DataSourceInterface):
         self.resolution = resolution
         self.stocks = {}
 
-    def store_price_points(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None, limit: int = 1000):
+    def store_price_points(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None,
+                           limit: int = 1000):
         if symbol in self.stocks:
             stock = self.stocks[symbol]
         else:
@@ -27,7 +28,7 @@ class FmpDataSource(DataSourceInterface):
         else:
             url_resolution = "historical-chart/" + str(self.resolution.value[0]) + "/"
 
-        if end_date == None:
+        if end_date is None:
             nb_entree = limit
             if self.resolution == Resolution.HOURLY:
                 nb_entree = math.ceil(nb_entree/6)
@@ -101,6 +102,7 @@ class FmpDataSource(DataSourceInterface):
             if date in stock.price_points:
                 return stock.price_points[date].close
         self.store_price_points(symbol, date.date())
+        return self.stocks[symbol].price_points[date].close
         
     def get_remaining_calls(self) -> int:
         body = {'data': {'key': self.token}}
@@ -111,5 +113,3 @@ class FmpDataSource(DataSourceInterface):
 
     def __get_interval__(self, start_time, end_time, resolution):
         return "from=" + str(start_time.date()) + "&to=" + str(end_time.date())
-
-        return self.stocks[symbol].price_points[date].close
