@@ -6,11 +6,18 @@ from bullets import logger
 
 class Portfolio:
 
-    def __init__(self, start_balance: float, data_source: DataSourceInterface):
+    def __init__(self,
+                 start_balance: float,
+                 data_source: DataSourceInterface,
+                 slippage_percent: int,
+                 transaction_fees: int):
         """
         Initializes the required variables for the Portfolio
         Args:
-            start_balance (str): Balance of the portfolio
+            start_balance (float): Balance of the portfolio
+            data_source (DataSourceInterface): Source used to retrieve market information
+            slippage_percent (int): Slippage percent to be applied to every purchase
+            transaction_fees (int): Fees to be applied to every transaction
         """
         self.start_balance = start_balance
         self.cash_balance = start_balance
@@ -18,20 +25,23 @@ class Portfolio:
         self.transactions = []
         self.timestamp = None
         self.data_source = data_source
+        self.slippage_percent = slippage_percent
+        self.transaction_fees = transaction_fees
 
     def market_order(self, symbol: str, nb_shares: float):
         """
-        Order a stock at market price
+        Order a stock at market price + slippage
         Args:
             symbol: Symbol of the stock you want to buy
             nb_shares: Number of shares of the order
         Returns: The transaction. The status explains whether the transaction was successful
         """
-        price = self.data_source.get_price(symbol)
-        transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price)
+        theoretical_price = self.data_source.get_price(symbol)
+        transaction = self.__validate_and_create_transaction__(symbol, nb_shares, theoretical_price,
+                                                               self.slippage_percent, self.transaction_fees)
         self.transactions.append(transaction)
         if transaction.status == Transaction.STATUS_SUCCESSFUL:
-            self.__put_holding__(symbol, nb_shares, price)
+            self.__put_holding__(symbol, nb_shares, transaction.simulated_price)
         return transaction
 
     def update_and_get_balance(self):
@@ -48,24 +58,37 @@ class Portfolio:
     def get_percentage_profit(self):
         return round(self.update_and_get_balance() / self.start_balance * 100 - 100, 2)
 
-    def __validate_and_create_transaction__(self, symbol: str, nb_shares: float, price: float):
+    def __validate_and_create_transaction__(self, symbol: str, nb_shares: float, theoretical_price: float,
+                                            slippage_percent: int, transaction_fees: int):
         """
         Validates and creates a transaction
         Args:
             symbol: Symbol of the stock you want to buy
             nb_shares: Number of shares of the order
-            price: Price per share
+            theoretical_price: Theoretical price per share from market
+            slippage_percent: Strategy's slippage percent
+            transaction_fees: Fees that need to be applied to the transaction
         Returns: Transaction with a successful or failed status
         """
-        if price is None:
+        simulated_price = None
+        if theoretical_price is None:
             status = Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND
         else:
-            if self.cash_balance >= nb_shares * price:
-                self.cash_balance = self.cash_balance - nb_shares * price
+            simulated_price = self.__get_slippage_price__(theoretical_price, slippage_percent)
+            if self.cash_balance >= nb_shares * simulated_price + transaction_fees:
+                self.cash_balance = self.cash_balance - (nb_shares * simulated_price + transaction_fees)
                 status = Transaction.STATUS_SUCCESSFUL
             else:
                 status = Transaction.STATUS_FAILED_INSUFFICIENT_FUNDS
-        return Transaction(symbol, nb_shares, price, self.timestamp, status)
+        return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, status,
+                           transaction_fees)
+
+    def __get_slippage_price__(self, price: float, slippage_percent: int) -> float:
+        daily_high_price = price  # todo : self.data_source.get_daily_high_price()
+        actual_slippage_percent = float(slippage_percent / 100)
+        slippage_factor = (daily_high_price - price) * actual_slippage_percent
+        simulated_slippage_price = price + slippage_factor
+        return simulated_slippage_price
 
     def __put_holding__(self, symbol: str, nb_shares: float, price: float):
         """
