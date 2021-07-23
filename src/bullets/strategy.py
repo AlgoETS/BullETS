@@ -35,12 +35,11 @@ class Strategy:
                                    self.transaction_fees)
         self.validate_start_data()
 
-    """
-        Extend this method to perform an operation that will be run on every resolution.
-    """
-
     @abstractmethod
     def on_resolution(self):
+        """
+            Extend this method to perform an operation that will be run on every resolution.
+        """
         pass
 
     def update_time(self, timestamp):
