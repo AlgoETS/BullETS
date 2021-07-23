@@ -10,6 +10,7 @@ __all__ = ["Runner"]
 class Runner:
     def __init__(self, strategy: Strategy):
         self.strategy = strategy
+        self.holidays = None
 
     def start(self):
         """
