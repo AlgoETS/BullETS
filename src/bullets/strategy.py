@@ -8,31 +8,38 @@ __all__ = ["Strategy"]
 
 
 class Strategy:
-
     """
     Base class for trading strategies. Extend this class and override the setup and on_resolution functions to make
     your own strategy.
     """
+
     def __init__(self,
                  resolution: Resolution,
                  start_time: datetime,
                  end_time: datetime,
                  starting_balance: float,
-                 data_source: DataSourceInterface):
+                 data_source: DataSourceInterface,
+                 slippage_percent: int = 25,
+                 transaction_fees: int = 1):
         self.resolution = resolution
         self.start_time = start_time
         self.end_time = end_time
         self.starting_balance = starting_balance
         self.data_source = data_source
-        self.portfolio = Portfolio(starting_balance, self.data_source)
+        self.slippage_percent = slippage_percent
+        self.transaction_fees = transaction_fees
         self.timestamp = None
+        self.portfolio = Portfolio(self.starting_balance,
+                                   self.data_source,
+                                   self.slippage_percent,
+                                   self.transaction_fees)
         self.validate_start_data()
 
-    """
-        Extend this method to perform an operation that will be run on every resolution.
-    """
     @abstractmethod
     def on_resolution(self):
+        """
+            Extend this method to perform an operation that will be run on every resolution.
+        """
         pass
 
     def update_time(self, timestamp):
@@ -54,3 +61,9 @@ class Strategy:
 
         if self.starting_balance is None or self.starting_balance <= 0:
             raise ValueError("Strategy starting balance should be positive")
+
+        if self.slippage_percent is None or self.slippage_percent < 0 or self.slippage_percent > 100:
+            raise ValueError("Slippage percent should be between 0 and 100")
+
+        if self.transaction_fees is None or self.transaction_fees < 0:
+            raise ValueError("Transaction fees should be positive or 0")
