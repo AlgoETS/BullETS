@@ -26,7 +26,7 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(5489.624975, strategy.portfolio.update_and_get_balance())
         self.assertEqual(120.71247499999933, strategy.portfolio.cash_balance)
         self.assertEqual(9.79, strategy.portfolio.get_percentage_profit())
-        self.assertEqual(33, len(strategy.portfolio.transactions))
+        self.assertEqual(34, len(strategy.portfolio.transactions))
 
     def test_strategy_none_date(self):
         self.assertRaisesRegex(TypeError, "Invalid strategy date type", TestStrategy,

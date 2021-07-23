@@ -1,5 +1,3 @@
-
-
 class Transaction:
     STATUS_SUCCESSFUL = "Successful"
     STATUS_FAILED_INSUFFICIENT_FUNDS = "Failed - Insufficient Funds"

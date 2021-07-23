@@ -1,5 +1,3 @@
-
-
 class Holding:
     def __init__(self, symbol: str):
         """
