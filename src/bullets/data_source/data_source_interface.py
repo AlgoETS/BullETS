@@ -17,7 +17,7 @@ class DataSourceInterface:
     def __init__(self):
         self.timestamp = None
 
-    def get_price(self, symbol: str, timestamp:datetime = None):
+    def get_price(self, symbol: str, timestamp: datetime = None):
         pass
 
     @staticmethod

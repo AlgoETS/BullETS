@@ -23,9 +23,9 @@ class TestPortfolio(unittest.TestCase):
         runner = Runner(strategy)
         runner.start()
         self.assertEqual(5000, strategy.portfolio.start_balance)
-        self.assertEqual(5468.624975, strategy.portfolio.update_and_get_balance())
-        self.assertEqual(99.71247499999933, strategy.portfolio.cash_balance)
-        self.assertEqual(9.37, strategy.portfolio.get_percentage_profit())
+        self.assertEqual(5458.0374725, strategy.portfolio.update_and_get_balance())
+        self.assertEqual(89.12497250000004, strategy.portfolio.cash_balance)
+        self.assertEqual(9.16, strategy.portfolio.get_percentage_profit())
         self.assertEqual(34, len(strategy.portfolio.transactions))
 
     def test_strategy_none_date(self):

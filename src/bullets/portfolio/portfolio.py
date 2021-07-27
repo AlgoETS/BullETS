@@ -1,4 +1,6 @@
-from bullets.data_source.data_source_interface import DataSourceInterface
+import datetime
+
+from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction
 from bullets import logger
@@ -74,7 +76,7 @@ class Portfolio:
         if theoretical_price is None:
             status = Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND
         else:
-            simulated_price = self.__get_slippage_price__(theoretical_price, slippage_percent)
+            simulated_price = self.__get_slippage_price__(theoretical_price, slippage_percent, symbol)
             if self.cash_balance >= nb_shares * simulated_price + transaction_fees:
                 self.cash_balance = self.cash_balance - (nb_shares * simulated_price + transaction_fees)
                 status = Transaction.STATUS_SUCCESSFUL
@@ -83,12 +85,22 @@ class Portfolio:
         return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, status,
                            transaction_fees)
 
-    def __get_slippage_price__(self, price: float, slippage_percent: int) -> float:
-        daily_high_price = price  # todo : self.data_source.get_daily_high_price()
+    def __get_slippage_price__(self, theoretical_price: float, slippage_percent: int, symbol: str) -> float:
+        daily_high_price = self.__get_daily_high_price(symbol)
         actual_slippage_percent = float(slippage_percent / 100)
-        slippage_factor = (daily_high_price - price) * actual_slippage_percent
-        simulated_slippage_price = price + slippage_factor
+        slippage_factor = (daily_high_price - theoretical_price) * actual_slippage_percent
+        simulated_slippage_price = theoretical_price + slippage_factor
+        print("theoretical price: " + str(theoretical_price) + " - " + "daily high price: " + str(daily_high_price) +
+              " - " + "simulated price: " + str(simulated_slippage_price))
         return simulated_slippage_price
+
+    def __get_daily_high_price(self, symbol: str) -> float:
+        previous_resolution = self.data_source.resolution
+        self.data_source.resolution = Resolution.DAILY
+        current_day = datetime.datetime(self.timestamp.year, self.timestamp.month, self.timestamp.day, 00, 00, 00)
+        high_price = self.data_source.get_price(symbol, current_day, "high")
+        self.data_source.resolution = previous_resolution
+        return high_price
 
     def __put_holding__(self, symbol: str, nb_shares: float, price: float):
         """

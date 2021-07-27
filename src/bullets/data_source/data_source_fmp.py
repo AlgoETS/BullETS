@@ -75,12 +75,13 @@ class FmpDataSource(DataSourceInterface):
 
         self.stocks[symbol] = stock
 
-    def get_price(self, symbol: str, timestamp: datetime = None) -> int:
+    def get_price(self, symbol: str, timestamp: datetime = None, value: str = None) -> int:
         """
         Gets the information of the stock at the current timestamp
         Args:
             symbol: Symbol of the stock
-            timestamp: Time of the data you want. If you want to the current time of the backtest, leave empty
+            timestamp: Time of the data you want. If you want the current time of the backtest, leave empty
+            value: Value of the stock you want (open, close, low, high, etc)
         Returns: The stock information at the given timestamp
         """
         if timestamp is None:
@@ -88,23 +89,39 @@ class FmpDataSource(DataSourceInterface):
         else:
             date = timestamp
 
-        value = self.__get_cached_price__(symbol, date)
+        already_cached = self.__get_cached_price__(symbol, date, value)
 
-        if value is None:
+        if already_cached is None:
             self.__store_price_points__(symbol, date.date())
-            new_value = self.__get_cached_price__(symbol, date)
-            if new_value is None:
+            newly_cached = self.__get_cached_price__(symbol, date, value)
+            if newly_cached is None:
                 return None
             else:
-                return new_value
+                return newly_cached
         else:
-            return value
+            return already_cached
 
-    def __get_cached_price__(self, symbol: str, date: datetime):
+    def __get_cached_price__(self, symbol: str, date: datetime, value: str):
         if symbol in self.stocks:
             stock = self.stocks[symbol]
             if date in stock.price_points:
-                return stock.price_points[date].close
+                return self.__get_specific_value__(date, stock, value)
+
+    def __get_specific_value__(self, date: datetime, stock: Stock, value: str):
+        if value is None or value == "close":
+            return stock.price_points[date].close
+        elif value == "date":
+            return stock.price_points[date].date
+        elif value == "open":
+            return stock.price_points[date].open
+        elif value == "low":
+            return stock.price_points[date].low
+        elif value == "high":
+            test = stock.price_points[date]
+            test2 = test.high
+            return test2
+        elif value == "volume":
+            return stock.price_points[date].volume
 
     def get_remaining_calls(self) -> int:
         body = {'data': {'key': self.token}}

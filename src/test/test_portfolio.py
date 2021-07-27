@@ -1,3 +1,4 @@
+import os
 import unittest
 import datetime
 from unittest import mock
@@ -44,7 +45,7 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(1, len(portfolio.transactions))
 
     def test_market_order(self):
-        data_source = FmpDataSource('878bd792d690ec6591d21a52de0b6774', Resolution.MINUTE)
+        data_source = FmpDataSource(os.getenv("FMP_TOKEN"), Resolution.MINUTE)
         portfolio = Portfolio(1000, data_source, 25, 1)
         portfolio.timestamp = datetime.datetime(2019, 3, 12, 15, 57)
         data_source.timestamp = datetime.datetime(2019, 3, 12, 15, 57)
