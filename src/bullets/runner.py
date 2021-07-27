@@ -1,4 +1,4 @@
-from bullets.portfolio.transaction import Transaction
+from bullets.portfolio.transaction import Transaction, Status
 from bullets.strategy import Strategy, Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
 from datetime import datetime, timedelta
@@ -94,7 +94,6 @@ class Runner:
         """
         final_timestamp = self.strategy.start_time
         for transaction in self.strategy.portfolio.transactions:
-            if transaction.status != Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND \
-                    and transaction.timestamp > final_timestamp:
+            if transaction.status != Status.FAILED_SYMBOL_NOT_FOUND and transaction.timestamp > final_timestamp:
                 final_timestamp = transaction.timestamp
         self.strategy.update_time(final_timestamp)

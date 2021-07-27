@@ -1,6 +1,6 @@
 from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.portfolio.holding import Holding
-from bullets.portfolio.transaction import Transaction
+from bullets.portfolio.transaction import Transaction, Status
 from bullets import logger
 
 
@@ -30,9 +30,8 @@ class Portfolio:
         price = self.data_source.get_price(symbol)
         transaction = self.__validate_and_create_transaction__(symbol, nb_shares, price)
         self.transactions.append(transaction)
-        if transaction.status == Transaction.STATUS_SUCCESSFUL:
-            logger.info("Market order made: " + str(transaction.timestamp) + " - " + transaction.symbol +
-                        " - " + str(transaction.nb_shares) + " shares - " + str(transaction.price) + "$")
+        self.__log_market_order__(transaction)
+        if transaction.status == Status.SUCCESSFUL:
             self.__put_holding__(symbol, nb_shares, price)
         return transaction
 
@@ -60,13 +59,13 @@ class Portfolio:
         Returns: Transaction with a successful or failed status
         """
         if price is None:
-            status = Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND
+            status = Status.FAILED_SYMBOL_NOT_FOUND
         else:
             if self.cash_balance >= nb_shares * price:
                 self.cash_balance = self.cash_balance - nb_shares * price
-                status = Transaction.STATUS_SUCCESSFUL
+                status = Status.SUCCESSFUL
             else:
-                status = Transaction.STATUS_FAILED_INSUFFICIENT_FUNDS
+                status = Status.FAILED_INSUFFICIENT_FUNDS
         return Transaction(symbol, nb_shares, price, self.timestamp, status)
 
     def __put_holding__(self, symbol: str, nb_shares: float, price: float):
@@ -83,3 +82,14 @@ class Portfolio:
             self.holdings.pop(symbol)
         else:
             self.holdings[symbol] = holding
+
+    def __log_market_order__(self, transaction: Transaction):
+        log = "(" + str(transaction.status.value[0]) + ") market order: "
+        if transaction.timestamp is not None:
+            log += str(transaction.timestamp) + " - "
+        log += transaction.symbol + " - " + str(transaction.nb_shares) + " shares "
+        if transaction.price is not None:
+            log += "@ " + str(transaction.price) + "$"
+        if transaction.status == Status.FAILED_INSUFFICIENT_FUNDS:
+            log += " -  cash balance : " + str(self.cash_balance) + "$"
+        logger.info(log)
