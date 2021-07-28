@@ -111,8 +111,8 @@ class Portfolio:
         if transaction.timestamp is not None:
             log += str(transaction.timestamp) + " - "
         log += transaction.symbol + " - " + str(transaction.nb_shares) + " shares "
-        if transaction.price is not None:
-            log += "@ " + str(transaction.price) + "$"
+        if transaction.simulated_price is not None:
+            log += "@ " + str(transaction.simulated_price) + "$"
         if transaction.status == Status.FAILED_INSUFFICIENT_FUNDS:
             log += " -  cash balance : " + str(self.cash_balance) + "$"
         logger.info(log)

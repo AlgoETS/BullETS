@@ -6,8 +6,10 @@ class Status(Enum):
     FAILED_INSUFFICIENT_FUNDS = "Failed - Insufficient Funds"
     FAILED_SYMBOL_NOT_FOUND = "Failed - Symbol not found"
 
+
 class Transaction:
-    def __init__(self, symbol: str, nb_shares: float, theoretical_price: float, simulated_price: float, timestamp, status: Status, transaction_fees: int)
+    def __init__(self, symbol: str, nb_shares: float, theoretical_price: float, simulated_price: float, timestamp,
+                 status: Status, transaction_fees: int):
         """
         Args:
             symbol (str): symbol for the stock (i.e. AAPL)
