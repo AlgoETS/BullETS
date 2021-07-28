@@ -86,20 +86,22 @@ class Portfolio:
                            transaction_fees)
 
     def __get_slippage_price__(self, theoretical_price: float, slippage_percent: int, symbol: str) -> float:
-        daily_high_price = self.__get_daily_high_price(symbol)
-        actual_slippage_percent = float(slippage_percent / 100)
-        slippage_factor = (daily_high_price - theoretical_price) * actual_slippage_percent
-        simulated_slippage_price = theoretical_price + slippage_factor
-        print("theoretical price: " + str(theoretical_price) + " - " + "daily high price: " + str(daily_high_price) +
-              " - " + "simulated price: " + str(simulated_slippage_price))
-        return simulated_slippage_price
+        # todo: see https://github.com/AlgoETS/BullETS/issues/46
+        if self.data_source.resolution is not Resolution.DAILY:
+            return theoretical_price
+        else:
+            daily_high_price = self.__get_daily_high_price__(symbol)
+            actual_slippage_percent = float(slippage_percent / 100)
+            slippage_factor = (daily_high_price - theoretical_price) * actual_slippage_percent
+            simulated_slippage_price = theoretical_price + slippage_factor
+            return simulated_slippage_price
 
-    def __get_daily_high_price(self, symbol: str) -> float:
-        previous_resolution = self.data_source.resolution
-        self.data_source.resolution = Resolution.DAILY
+    def __get_daily_high_price__(self, symbol: str) -> float:
+        # previous_resolution = self.data_source.resolution
+        # self.data_source.resolution = Resolution.DAILY
         current_day = datetime.datetime(self.timestamp.year, self.timestamp.month, self.timestamp.day, 00, 00, 00)
         high_price = self.data_source.get_price(symbol, current_day, "high")
-        self.data_source.resolution = previous_resolution
+        # self.data_source.resolution = previous_resolution
         return high_price
 
     def __put_holding__(self, symbol: str, nb_shares: float, price: float):

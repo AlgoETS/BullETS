@@ -25,7 +25,7 @@ class FmpDataSource(DataSourceInterface):
         if self.resolution == Resolution.DAILY:
             url_resolution = "historical-price-full/"
         else:
-            url_resolution = "historical-chart/" + str(self.resolution.value[0]) + "/"
+            url_resolution = "historical-chart/" + str(self.resolution.value) + "/"
 
         if end_date is None:
             nb_entree = limit

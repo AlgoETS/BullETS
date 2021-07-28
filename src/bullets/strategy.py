@@ -2,6 +2,7 @@ from abc import abstractmethod
 
 from bullets.portfolio.portfolio import Portfolio
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
+from bullets import logger
 from datetime import datetime
 
 __all__ = ["Strategy"]
@@ -55,6 +56,8 @@ class Strategy:
 
         if not isinstance(self.resolution, Resolution):
             raise TypeError("Invalid strategy resolution type")
+        elif self.resolution is not Resolution.DAILY:
+            logger.warning("Resolution not set to daily, market orders will not consider slippage, split or dividend")
 
         if not isinstance(self.data_source, DataSourceInterface):
             raise TypeError("Invalid strategy data source type")

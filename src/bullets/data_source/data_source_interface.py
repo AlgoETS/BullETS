@@ -8,8 +8,8 @@ from enum import Enum
 
 
 class Resolution(Enum):
-    DAILY = "1day",
-    HOURLY = "1hour",
+    DAILY = "1day"
+    HOURLY = "1hour"
     MINUTE = "1min"
 
 

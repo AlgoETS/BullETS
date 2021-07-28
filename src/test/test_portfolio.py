@@ -12,7 +12,8 @@ class TestPortfolio(unittest.TestCase):
     TIME = datetime.datetime(2021, 3, 10)
 
     @mock.patch('bullets.data_source.data_source_interface.DataSourceInterface.get_price', return_value=1)
-    def test_buy_sell_long(self, mock_get_price):
+    @mock.patch('bullets.portfolio.portfolio.Portfolio.__get_slippage_price__', return_value=1)
+    def test_buy_sell_long(self, mock_get_price, mock___get_slippage_price__):
         portfolio = Portfolio(1000, DataSourceInterface(), 25, 1)
         transaction = portfolio.market_order("AAPL", 999)
         self.assertEqual(Transaction.STATUS_SUCCESSFUL, transaction.status)
@@ -24,7 +25,8 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(2, len(portfolio.transactions))
 
     @mock.patch('bullets.data_source.data_source_interface.DataSourceInterface.get_price', return_value=1)
-    def test_buy_sell_short(self, mock_get_price):
+    @mock.patch('bullets.portfolio.portfolio.Portfolio.__get_slippage_price__', return_value=1)
+    def test_buy_sell_short(self, mock_get_price, mock___get_slippage_price__):
         portfolio = Portfolio(1000, DataSourceInterface(), 25, 1)
         transaction = portfolio.market_order("AAPL", -1000)
         self.assertEqual(Transaction.STATUS_SUCCESSFUL, transaction.status)
@@ -36,7 +38,8 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(2, len(portfolio.transactions))
 
     @mock.patch('bullets.data_source.data_source_interface.DataSourceInterface.get_price', return_value=1)
-    def test_insufficient_funds(self, mock_get_price):
+    @mock.patch('bullets.portfolio.portfolio.Portfolio.__get_slippage_price__', return_value=1)
+    def test_insufficient_funds(self, mock_get_price, mock___get_slippage_price__):
         portfolio = Portfolio(1000, DataSourceInterface(), 25, 1)
         transaction = portfolio.market_order("AAPL", 2000)
         self.assertEqual(Transaction.STATUS_FAILED_INSUFFICIENT_FUNDS, transaction.status)
