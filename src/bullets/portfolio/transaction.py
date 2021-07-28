@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class Status(Enum):
-    SUCCESSFUL = "Successful",
-    FAILED_INSUFFICIENT_FUNDS = "Failed - Insufficient Funds",
-    FAILED_SYMBOL_NOT_FOUND = "Failed - Symbol couldn't be found"
+    SUCCESSFUL = "Successful"
+    FAILED_INSUFFICIENT_FUNDS = "Failed - Insufficient Funds"
+    FAILED_SYMBOL_NOT_FOUND = "Failed - Symbol not found"
 
 class Transaction:
     def __init__(self, symbol: str, nb_shares: float, price: float, timestamp, status: Status):

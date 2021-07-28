@@ -84,7 +84,7 @@ class Portfolio:
             self.holdings[symbol] = holding
 
     def __log_market_order__(self, transaction: Transaction):
-        log = "(" + str(transaction.status.value[0]) + ") market order: "
+        log = "(" + str(transaction.status.value) + ") market order: "
         if transaction.timestamp is not None:
             log += str(transaction.timestamp) + " - "
         log += transaction.symbol + " - " + str(transaction.nb_shares) + " shares "
