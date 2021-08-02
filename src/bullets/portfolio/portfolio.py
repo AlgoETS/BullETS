@@ -1,7 +1,6 @@
 from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction, Status
-from bullets import logger
 
 
 class Portfolio:
@@ -40,7 +39,6 @@ class Portfolio:
         transaction = self.__validate_and_create_transaction__(symbol, nb_shares, theoretical_price,
                                                                self.slippage_percent, self.transaction_fees)
         self.transactions.append(transaction)
-        self.__log_market_order__(transaction)
         if transaction.status == Status.SUCCESSFUL:
             self.__put_holding__(symbol, nb_shares, transaction.simulated_price)
         return transaction
@@ -81,8 +79,8 @@ class Portfolio:
                 status = Status.SUCCESSFUL
             else:
                 status = Status.FAILED_INSUFFICIENT_FUNDS
-        return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, status,
-                           transaction_fees)
+        return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, self.cash_balance,
+                           status, transaction_fees)
 
     def __get_slippage_price__(self, price: float, slippage_percent: int) -> float:
         daily_high_price = price  # todo : self.data_source.get_daily_high_price()
@@ -105,14 +103,3 @@ class Portfolio:
             self.holdings.pop(symbol)
         else:
             self.holdings[symbol] = holding
-
-    def __log_market_order__(self, transaction: Transaction):
-        log = "(" + str(transaction.status.value) + ") market order: "
-        if transaction.timestamp is not None:
-            log += str(transaction.timestamp) + " - "
-        log += transaction.symbol + " - " + str(transaction.nb_shares) + " shares "
-        if transaction.simulated_price is not None:
-            log += "@ " + str(transaction.simulated_price) + "$"
-        if transaction.status == Status.FAILED_INSUFFICIENT_FUNDS:
-            log += " -  cash balance : " + str(self.cash_balance) + "$"
-        logger.info(log)
