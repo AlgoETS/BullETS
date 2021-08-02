@@ -42,6 +42,18 @@ class Strategy:
         """
         pass
 
+    def on_start(self):
+        """
+            Extend this method to perform an operation that will be run at the start of the strategy.
+        """
+        pass
+
+    def on_finish(self):
+        """
+            Extend this method to perform an operation that will be run at the end of the strategy.
+        """
+        pass
+
     def update_time(self, timestamp):
         self.timestamp = timestamp
         self.data_source.timestamp = timestamp

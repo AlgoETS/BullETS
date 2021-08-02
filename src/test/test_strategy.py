@@ -55,8 +55,14 @@ class TestPortfolio(unittest.TestCase):
 
 class TestStrategy(Strategy):
 
+    def on_start(self):
+        pass
+
     def on_resolution(self):
         self.portfolio.market_order("AAPL", 5)
+
+    def on_finish(self):
+        pass
 
 
 if __name__ == '__main__':
