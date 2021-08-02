@@ -8,8 +8,8 @@ from enum import Enum
 
 
 class Resolution(Enum):
-    DAILY = "1day",
-    HOURLY = "1hour",
+    DAILY = "1day"
+    HOURLY = "1hour"
     MINUTE = "1min"
 
 
@@ -17,7 +17,7 @@ class DataSourceInterface:
     def __init__(self):
         self.timestamp = None
 
-    def get_price(self, symbol: str, timestamp:datetime = None):
+    def get_price(self, symbol: str, timestamp: datetime = None):
         pass
 
     @staticmethod
