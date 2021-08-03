@@ -3,7 +3,7 @@ import unittest
 import datetime
 from unittest import mock
 from bullets.portfolio.portfolio import Portfolio
-from bullets.portfolio.transaction import Transaction
+from bullets.portfolio.transaction import Transaction, Status
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
 
@@ -16,10 +16,10 @@ class TestPortfolio(unittest.TestCase):
     def test_buy_sell_long(self, mock_get_price, mock___get_slippage_price__):
         portfolio = Portfolio(1000, DataSourceInterface(), 25, 1)
         transaction = portfolio.market_order("AAPL", 999)
-        self.assertEqual(Transaction.STATUS_SUCCESSFUL, transaction.status)
+        self.assertEqual(Status.SUCCESSFUL, transaction.status)
         self.assertEqual(0, portfolio.cash_balance)
         transaction = portfolio.market_order("AAPL", -999)
-        self.assertEqual(Transaction.STATUS_SUCCESSFUL, transaction.status)
+        self.assertEqual(Status.SUCCESSFUL, transaction.status)
         self.assertEqual(998, portfolio.cash_balance)
         self.assertEqual(0, len(portfolio.holdings))
         self.assertEqual(2, len(portfolio.transactions))
@@ -29,11 +29,10 @@ class TestPortfolio(unittest.TestCase):
     def test_buy_sell_short(self, mock_get_price, mock___get_slippage_price__):
         portfolio = Portfolio(1000, DataSourceInterface(), 25, 1)
         transaction = portfolio.market_order("AAPL", -1000)
-        self.assertEqual(Transaction.STATUS_SUCCESSFUL, transaction.status)
+        self.assertEqual(Status.SUCCESSFUL, transaction.status)
         self.assertEqual(1999, portfolio.cash_balance)
         transaction = portfolio.market_order("AAPL", 1000)
-        self.assertEqual(Transaction.STATUS_SUCCESSFUL, transaction.status)
-        self.assertEqual(998, portfolio.cash_balance)
+        self.assertEqual(Status.SUCCESSFUL, transaction.status)
         self.assertEqual(0, len(portfolio.holdings))
         self.assertEqual(2, len(portfolio.transactions))
 
@@ -42,7 +41,7 @@ class TestPortfolio(unittest.TestCase):
     def test_insufficient_funds(self, mock_get_price, mock___get_slippage_price__):
         portfolio = Portfolio(1000, DataSourceInterface(), 25, 1)
         transaction = portfolio.market_order("AAPL", 2000)
-        self.assertEqual(Transaction.STATUS_FAILED_INSUFFICIENT_FUNDS, transaction.status)
+        self.assertEqual(Status.FAILED_INSUFFICIENT_FUNDS, transaction.status)
         self.assertEqual(1000, portfolio.cash_balance)
         self.assertEqual(0, len(portfolio.holdings))
         self.assertEqual(1, len(portfolio.transactions))

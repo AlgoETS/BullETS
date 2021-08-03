@@ -2,8 +2,7 @@ import datetime
 
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.portfolio.holding import Holding
-from bullets.portfolio.transaction import Transaction
-from bullets import logger
+from bullets.portfolio.transaction import Transaction, Status
 
 
 class Portfolio:
@@ -42,7 +41,7 @@ class Portfolio:
         transaction = self.__validate_and_create_transaction__(symbol, nb_shares, theoretical_price,
                                                                self.slippage_percent, self.transaction_fees)
         self.transactions.append(transaction)
-        if transaction.status == Transaction.STATUS_SUCCESSFUL:
+        if transaction.status == Status.SUCCESSFUL:
             self.__put_holding__(symbol, nb_shares, transaction.simulated_price)
         return transaction
 
@@ -74,16 +73,16 @@ class Portfolio:
         """
         simulated_price = None
         if theoretical_price is None:
-            status = Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND
+            status = Status.FAILED_SYMBOL_NOT_FOUND
         else:
             simulated_price = self.__get_slippage_price__(theoretical_price, slippage_percent, symbol)
             if self.cash_balance >= nb_shares * simulated_price + transaction_fees:
                 self.cash_balance = self.cash_balance - (nb_shares * simulated_price + transaction_fees)
-                status = Transaction.STATUS_SUCCESSFUL
+                status = Status.SUCCESSFUL
             else:
-                status = Transaction.STATUS_FAILED_INSUFFICIENT_FUNDS
-        return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, status,
-                           transaction_fees)
+                status = Status.FAILED_INSUFFICIENT_FUNDS
+        return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, self.cash_balance,
+                           status, transaction_fees)
 
     def __get_slippage_price__(self, theoretical_price: float, slippage_percent: int, symbol: str) -> float:
         # todo: see https://github.com/AlgoETS/BullETS/issues/46
