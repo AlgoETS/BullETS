@@ -2,6 +2,7 @@ import datetime
 
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.portfolio.holding import Holding
+from bullets.portfolio.order import Order
 from bullets.portfolio.transaction import Transaction, Status
 
 
@@ -28,6 +29,10 @@ class Portfolio:
         self.data_source = data_source
         self.slippage_percent = slippage_percent
         self.transaction_fees = transaction_fees
+        self.pending_buy_limit_orders = []
+        self.pending_sell_limit_orders = []
+        self.pending_buy_stop_orders = []
+        self.pending_sell_stop_orders = []
 
     def market_order(self, symbol: str, nb_shares: float):
         """
@@ -44,6 +49,70 @@ class Portfolio:
         if transaction.status == Status.SUCCESSFUL:
             self.__put_holding__(symbol, nb_shares, transaction.simulated_price)
         return transaction
+
+    def buy_limit_order(self, symbol: str, nb_shares: float, price):
+        """
+        Order to buy at a certain price or lower (Includes slippage and transaction fee)
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+            price: Limit Price
+        """
+        self.pending_buy_stop_orders.append(Order(symbol, nb_shares, price))
+
+    def sell_limit_order(self, symbol: str, nb_shares: float, price):
+        """
+        Order to sell at a certain price or higher (Includes slippage and transaction fee)
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+            price: Limit Price
+        """
+        self.pending_sell_stop_orders.append(Order(symbol, -nb_shares, price))
+
+    def buy_stop_order(self, symbol: str, nb_shares: float, price):
+        """
+        Order to buy at a certain price or lower in an effort to avoid losses (Includes slippage and transaction fee)
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+            price: Stop Price
+        """
+        self.pending_buy_stop_orders.append(Order(symbol, nb_shares, price))
+
+    def sell_stop_order(self, symbol: str, nb_shares: float, price):
+        """
+        Order to sell at a certain price or higher in an effort to avoid losses (Includes slippage and transaction fee)
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+            price: Stop Price
+        """
+        self.pending_sell_stop_orders.append(Order(symbol, -nb_shares, price))
+
+    def on_resolution(self):
+        """
+        Runs at every data point to run the stop and limit orders
+        """
+        for order in self.pending_buy_stop_orders:
+            price = self.data_source.get_price(order.symbol)
+            if price <= order.price:
+                self.market_order(order.symbol, order.nb_shares)
+
+        for order in self.pending_sell_stop_orders:
+            price = self.data_source.get_price(order.symbol)
+            if price >= order.price:
+                self.market_order(order.symbol, order.nb_shares)
+
+        for order in self.pending_buy_limit_orders:
+            price = self.data_source.get_price(order.symbol)
+            if price <= order.price:
+                self.market_order(order.symbol, order.nb_shares)
+
+        for order in self.pending_sell_limit_orders:
+            price = self.data_source.get_price(order.symbol)
+            if price >= order.price:
+                self.market_order(order.symbol, order.nb_shares)
 
     def update_and_get_balance(self):
         """
