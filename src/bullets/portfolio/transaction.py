@@ -32,9 +32,9 @@ class Transaction:
         self.status = status
         self.transaction_fees = transaction_fees
         self.order_type = order_type
-        self.__log__()
+        self._log()
 
-    def __log__(self):
+    def _log(self):
         log = "(" + str(self.status.value) + ") " + self.order_type + ": "
         if self.timestamp is not None:
             log += str(self.timestamp) + " - "

@@ -35,9 +35,9 @@ class Portfolio:
         self.pending_sell_stop_orders = []
 
     def market_order(self, symbol: str, nb_shares: float):
-        return self.__order(symbol, nb_shares, "Market Order")
+        return self._order(symbol, nb_shares, "Market Order")
 
-    def __order(self, symbol: str, nb_shares: float, order_type: str):
+    def _order(self, symbol: str, nb_shares: float, order_type: str):
         """
         Order a stock at market price + slippage
         Args:
@@ -46,11 +46,11 @@ class Portfolio:
         Returns: The transaction. The status explains whether the transaction was successful
         """
         theoretical_price = self.data_source.get_price(symbol, self.timestamp)
-        transaction = self.__validate_and_create_transaction__(symbol, nb_shares, theoretical_price,
-                                                               self.slippage_percent, self.transaction_fees, order_type)
+        transaction = self._validate_and_create_transaction(symbol, nb_shares, theoretical_price,
+                                                            self.slippage_percent, self.transaction_fees, order_type)
         self.transactions.append(transaction)
         if transaction.status == Status.SUCCESSFUL:
-            self.__put_holding__(symbol, nb_shares, transaction.simulated_price)
+            self._put_holding(symbol, nb_shares, transaction.simulated_price)
         return transaction
 
     def buy_limit_order(self, symbol: str, nb_shares: float, price):
@@ -100,22 +100,22 @@ class Portfolio:
         for order in self.pending_buy_stop_orders:
             price = self.data_source.get_price(order.symbol)
             if price <= order.price:
-                self.__order(order.symbol, order.nb_shares, "Buy Stop Order")
+                self._order(order.symbol, order.nb_shares, "Buy Stop Order")
 
         for order in self.pending_sell_stop_orders:
             price = self.data_source.get_price(order.symbol)
             if price >= order.price:
-                self.__order(order.symbol, order.nb_shares, "Sell Stop Order")
+                self._order(order.symbol, order.nb_shares, "Sell Stop Order")
 
         for order in self.pending_buy_limit_orders:
             price = self.data_source.get_price(order.symbol)
             if price <= order.price:
-                self.__order(order.symbol, order.nb_shares, "Buy Limit Order")
+                self._order(order.symbol, order.nb_shares, "Buy Limit Order")
 
         for order in self.pending_sell_limit_orders:
             price = self.data_source.get_price(order.symbol)
             if price >= order.price:
-                self.__order(order.symbol, order.nb_shares, "Sell Limit Order")
+                self._order(order.symbol, order.nb_shares, "Sell Limit Order")
 
     def update_and_get_balance(self):
         """
@@ -131,8 +131,8 @@ class Portfolio:
     def get_percentage_profit(self):
         return round(self.update_and_get_balance() / self.start_balance * 100 - 100, 2)
 
-    def __validate_and_create_transaction__(self, symbol: str, nb_shares: float, theoretical_price: float,
-                                            slippage_percent: int, transaction_fees: int, order_type: str):
+    def _validate_and_create_transaction(self, symbol: str, nb_shares: float, theoretical_price: float,
+                                         slippage_percent: int, transaction_fees: int, order_type: str):
         """
         Validates and creates a transaction
         Args:
@@ -147,7 +147,7 @@ class Portfolio:
         if theoretical_price is None:
             status = Status.FAILED_SYMBOL_NOT_FOUND
         else:
-            simulated_price = self.__get_slippage_price__(theoretical_price, slippage_percent, symbol)
+            simulated_price = self._get_slippage_price(theoretical_price, slippage_percent, symbol)
             if self.cash_balance >= nb_shares * simulated_price + transaction_fees:
                 self.cash_balance = self.cash_balance - (nb_shares * simulated_price + transaction_fees)
                 status = Status.SUCCESSFUL
@@ -156,18 +156,18 @@ class Portfolio:
         return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, self.cash_balance,
                            status, transaction_fees, order_type)
 
-    def __get_slippage_price__(self, theoretical_price: float, slippage_percent: int, symbol: str) -> float:
+    def _get_slippage_price(self, theoretical_price: float, slippage_percent: int, symbol: str) -> float:
         # todo: see https://github.com/AlgoETS/BullETS/issues/46
         if self.data_source.resolution is not Resolution.DAILY:
             return theoretical_price
         else:
-            daily_high_price = self.__get_daily_high_price__(symbol)
+            daily_high_price = self._get_daily_high_price(symbol)
             actual_slippage_percent = float(slippage_percent / 100)
             slippage_factor = (daily_high_price - theoretical_price) * actual_slippage_percent
             simulated_slippage_price = theoretical_price + slippage_factor
             return simulated_slippage_price
 
-    def __get_daily_high_price__(self, symbol: str) -> float:
+    def _get_daily_high_price(self, symbol: str) -> float:
         # previous_resolution = self.data_source.resolution
         # self.data_source.resolution = Resolution.DAILY
         current_day = datetime.datetime(self.timestamp.year, self.timestamp.month, self.timestamp.day, 00, 00, 00)
@@ -175,7 +175,7 @@ class Portfolio:
         # self.data_source.resolution = previous_resolution
         return high_price
 
-    def __put_holding__(self, symbol: str, nb_shares: float, price: float):
+    def _put_holding(self, symbol: str, nb_shares: float, price: float):
         """
         Creates, updates or deletes a holding based on the number of shares
         Args:
