@@ -24,6 +24,7 @@ class Runner:
         for moment in moments:
             self.strategy.update_time(moment)
             self.strategy.on_resolution()
+            self.strategy.portfolio.on_resolution()
         self.post_backtest_log()
         self.strategy.on_finish()
 

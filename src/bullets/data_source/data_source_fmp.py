@@ -15,8 +15,8 @@ class FmpDataSource(DataSourceInterface):
         self.resolution = resolution
         self.stocks = {}
 
-    def __store_price_points__(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None,
-                               limit: int = 1000):
+    def _store_price_points(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None,
+                            limit: int = 1000):
         if symbol in self.stocks:
             stock = self.stocks[symbol]
         else:
@@ -89,11 +89,11 @@ class FmpDataSource(DataSourceInterface):
         else:
             date = timestamp
 
-        already_cached = self.__get_cached_price__(symbol, date, value)
+        already_cached = self._get_cached_price(symbol, date, value)
 
         if already_cached is None:
-            self.__store_price_points__(symbol, date.date())
-            newly_cached = self.__get_cached_price__(symbol, date, value)
+            self._store_price_points(symbol, date.date())
+            newly_cached = self._get_cached_price(symbol, date, value)
             if newly_cached is None:
                 return None
             else:
@@ -101,13 +101,14 @@ class FmpDataSource(DataSourceInterface):
         else:
             return already_cached
 
-    def __get_cached_price__(self, symbol: str, date: datetime, value: str):
+    def _get_cached_price(self, symbol: str, date: datetime, value: str):
         if symbol in self.stocks:
             stock = self.stocks[symbol]
             if date in stock.price_points:
-                return self.__get_specific_value__(date, stock, value)
+                return self._get_specific_value(date, stock, value)
 
-    def __get_specific_value__(self, date: datetime, stock: Stock, value: str):
+    @staticmethod
+    def _get_specific_value(date: datetime, stock: Stock, value: str):
         if value is None or value == "close":
             return stock.price_points[date].close
         elif value == "date":

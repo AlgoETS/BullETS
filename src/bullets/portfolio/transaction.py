@@ -11,7 +11,7 @@ class Status(Enum):
 
 class Transaction:
     def __init__(self, symbol: str, nb_shares: float, theoretical_price: float, simulated_price: float,
-                 timestamp: datetime, cash_balance: float, status: Status, transaction_fees: int):
+                 timestamp: datetime, cash_balance: float, status: Status, transaction_fees: int, order_type: str):
         """
         Args:
             symbol (str): symbol for the stock (i.e. AAPL)
@@ -31,10 +31,11 @@ class Transaction:
         self.cash_balance = cash_balance
         self.status = status
         self.transaction_fees = transaction_fees
-        self.__log__()
+        self.order_type = order_type
+        self._log()
 
-    def __log__(self):
-        log = "(" + str(self.status.value) + ") market order: "
+    def _log(self):
+        log = "(" + str(self.status.value) + ") " + self.order_type + ": "
         if self.timestamp is not None:
             log += str(self.timestamp) + " - "
         log += self.symbol + " - " + str(self.nb_shares) + " shares "
