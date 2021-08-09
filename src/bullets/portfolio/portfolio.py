@@ -35,7 +35,11 @@ class Portfolio:
         self.pending_sell_stop_orders = []
 
     def market_order(self, symbol: str, nb_shares: float):
-        return self._order(symbol, nb_shares, "Market Order")
+        order_type = "Buy Market Order"
+        if nb_shares < 0:
+            order_type = "Sell Market Order"
+
+        return self._order(symbol, nb_shares, order_type)
 
     def _order(self, symbol: str, nb_shares: float, order_type: str):
         """
