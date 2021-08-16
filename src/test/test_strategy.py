@@ -4,7 +4,7 @@ import unittest
 from bullets.strategy import Strategy, Resolution
 from bullets.runner import Runner
 from bullets.data_source.data_source_fmp import FmpDataSource
-from datetime import datetime
+from datetime import datetime, date
 
 
 class TestPortfolio(unittest.TestCase):
@@ -52,11 +52,23 @@ class TestPortfolio(unittest.TestCase):
                                self.RESOLUTION, self.START_TIME, self.END_TIME, self.STARTING_BALANCE * -1,
                                FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
 
+    def test_income_statements(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(2.9925, datasource.get_income_statement("AAPL", date(2019, 9, 28)).eps)
+
+    def test_balance_sheet_statements(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(4106000000, datasource.get_balance_sheet_statement("AAPL", date(2019, 9, 28)).inventory)
+
+    def test_cash_flow_statements(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(55256000000, datasource.get_cash_flow_statement("AAPL", date(2019, 9, 28)).net_income)
+
 
 class TestStrategy(Strategy):
 
     def on_start(self):
-        pass
+        symbols = self.data_source.get_symbol_list()
 
     def on_resolution(self):
         self.portfolio.market_order("AAPL", 5)
