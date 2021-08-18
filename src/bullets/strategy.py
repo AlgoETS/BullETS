@@ -1,27 +1,15 @@
 from abc import abstractmethod
-
+from datetime import datetime
 from bullets.portfolio.portfolio import Portfolio
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets import logger
-from datetime import datetime
 
 __all__ = ["Strategy"]
 
 
 class Strategy:
-    """
-    Base class for trading strategies. Extend this class and override the setup and on_resolution functions to make
-    your own strategy.
-    """
-
-    def __init__(self,
-                 resolution: Resolution,
-                 start_time: datetime,
-                 end_time: datetime,
-                 starting_balance: float,
-                 data_source: DataSourceInterface,
-                 slippage_percent: int = 25,
-                 transaction_fees: int = 1):
+    def __init__(self, resolution: Resolution, start_time: datetime, end_time: datetime, starting_balance: float,
+                 data_source: DataSourceInterface, slippage_percent: int = 25, transaction_fees: int = 1):
         self.resolution = resolution
         self.start_time = start_time
         self.end_time = end_time
@@ -30,11 +18,9 @@ class Strategy:
         self.slippage_percent = slippage_percent
         self.transaction_fees = transaction_fees
         self.timestamp = None
-        self.portfolio = Portfolio(self.starting_balance,
-                                   self.data_source,
-                                   self.slippage_percent,
+        self.portfolio = Portfolio(self.starting_balance, self.data_source, self.slippage_percent,
                                    self.transaction_fees)
-        self.validate_start_data()
+        self._validate_start_data()
 
     @abstractmethod
     def on_resolution(self):
@@ -43,12 +29,14 @@ class Strategy:
         """
         pass
 
+    @abstractmethod
     def on_start(self):
         """
             Extend this method to perform an operation that will be run at the start of the strategy.
         """
         pass
 
+    @abstractmethod
     def on_finish(self):
         """
             Extend this method to perform an operation that will be run at the end of the strategy.
@@ -56,11 +44,16 @@ class Strategy:
         pass
 
     def update_time(self, timestamp):
+        """
+        Updates all timestamps (strategy, datasource, portfolio) to a specific timestamp
+        Args:
+            timestamp: the new timestamp wanted
+        """
         self.timestamp = timestamp
         self.data_source.timestamp = timestamp
         self.portfolio.timestamp = timestamp
 
-    def validate_start_data(self):
+    def _validate_start_data(self):
         if not isinstance(self.start_time, datetime) or not isinstance(self.end_time, datetime):
             raise TypeError("Invalid strategy date type")
         elif self.start_time > self.end_time or self.start_time == self.end_time:

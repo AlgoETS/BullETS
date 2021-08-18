@@ -2,25 +2,21 @@ import datetime
 
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.portfolio.holding import Holding
-from bullets.portfolio.order import Order
 from bullets.portfolio.transaction import Transaction, Status
+
+__all__ = ["Order", "Portfolio"]
+
+
+class Order:
+    def __init__(self, symbol, nb_shares, price):
+        self.symbol = symbol
+        self.nb_shares = nb_shares
+        self.price = price
 
 
 class Portfolio:
-
-    def __init__(self,
-                 start_balance: float,
-                 data_source: DataSourceInterface,
-                 slippage_percent: int,
+    def __init__(self, start_balance: float, data_source: DataSourceInterface, slippage_percent: int,
                  transaction_fees: int):
-        """
-        Initializes the required variables for the Portfolio
-        Args:
-            start_balance (float): Balance of the portfolio
-            data_source (DataSourceInterface): Source used to retrieve market information
-            slippage_percent (int): Slippage percent to be applied to every purchase
-            transaction_fees (int): Fees to be applied to every transaction
-        """
         self.start_balance = start_balance
         self.cash_balance = start_balance
         self.holdings = {}
@@ -35,27 +31,17 @@ class Portfolio:
         self.pending_sell_stop_orders = []
 
     def market_order(self, symbol: str, nb_shares: float):
+        """
+        Order to buy a certain quantity of shares (Includes slippage and transaction fee)
+        Args:
+            symbol: Symbol of the stock you want to buy
+            nb_shares: Number of shares of the order
+        """
         order_type = "Buy Market Order"
         if nb_shares < 0:
             order_type = "Sell Market Order"
 
         return self._order(symbol, nb_shares, order_type)
-
-    def _order(self, symbol: str, nb_shares: float, order_type: str):
-        """
-        Order a stock at market price + slippage
-        Args:
-            symbol: Symbol of the stock you want to buy
-            nb_shares: Number of shares of the order
-        Returns: The transaction. The status explains whether the transaction was successful
-        """
-        theoretical_price = self.data_source.get_price(symbol, self.timestamp)
-        transaction = self._validate_and_create_transaction(symbol, nb_shares, theoretical_price,
-                                                            self.slippage_percent, self.transaction_fees, order_type)
-        self.transactions.append(transaction)
-        if transaction.status == Status.SUCCESSFUL:
-            self._put_holding(symbol, nb_shares, transaction.simulated_price)
-        return transaction
 
     def buy_limit_order(self, symbol: str, nb_shares: float, price):
         """
@@ -99,7 +85,7 @@ class Portfolio:
 
     def on_resolution(self):
         """
-        Runs at every data point to run the stop and limit orders
+        Runs at every resolution to run the stop and limit orders
         """
         for order in self.pending_buy_stop_orders:
             price = self.data_source.get_price(order.symbol)
@@ -132,21 +118,31 @@ class Portfolio:
             balance = balance + holding.nb_shares * holding.current_price
         return balance
 
-    def get_percentage_profit(self):
+    def get_percentage_profit(self) -> float:
+        """
+        Get the strategy's overall profit percentage
+        Returns: Profit percentage
+        """
         return round(self.update_and_get_balance() / self.start_balance * 100 - 100, 2)
 
-    def _validate_and_create_transaction(self, symbol: str, nb_shares: float, theoretical_price: float,
-                                         slippage_percent: int, transaction_fees: int, order_type: str):
+    def _order(self, symbol: str, nb_shares: float, order_type: str):
         """
-        Validates and creates a transaction
+        Order a stock at market price + slippage
         Args:
             symbol: Symbol of the stock you want to buy
             nb_shares: Number of shares of the order
-            theoretical_price: Theoretical price per share from market
-            slippage_percent: Strategy's slippage percent
-            transaction_fees: Fees that need to be applied to the transaction
-        Returns: Transaction with a successful or failed status
+        Returns: The transaction. The status explains whether the transaction was successful
         """
+        theoretical_price = self.data_source.get_price(symbol, self.timestamp)
+        transaction = self._validate_and_create_transaction(symbol, nb_shares, theoretical_price,
+                                                            self.slippage_percent, self.transaction_fees, order_type)
+        self.transactions.append(transaction)
+        if transaction.status == Status.SUCCESSFUL:
+            self._put_holding(symbol, nb_shares, transaction.simulated_price)
+        return transaction
+
+    def _validate_and_create_transaction(self, symbol: str, nb_shares: float, theoretical_price: float,
+                                         slippage_percent: int, transaction_fees: int, order_type: str):
         simulated_price = None
         if theoretical_price is None:
             status = Status.FAILED_SYMBOL_NOT_FOUND
@@ -180,13 +176,6 @@ class Portfolio:
         return high_price
 
     def _put_holding(self, symbol: str, nb_shares: float, price: float):
-        """
-        Creates, updates or deletes a holding based on the number of shares
-        Args:
-            symbol: Symbol of the stock you want to buy
-            nb_shares: Number of shares of the order
-            price: Price per share
-        """
         holding = self.holdings.get(symbol, Holding(symbol))
         nb_shares = holding.add_shares(nb_shares, price)
         if nb_shares == 0:

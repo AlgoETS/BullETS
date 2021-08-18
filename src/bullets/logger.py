@@ -2,6 +2,8 @@ import logging
 import sys
 from enum import Enum
 
+__all__ = ["LogLevels", "CustomFormatter"]
+
 
 class LogLevels(Enum):
     ERROR = logging.ERROR

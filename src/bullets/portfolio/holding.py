@@ -1,22 +1,20 @@
+__all__ = ["Holding"]
+
+
 class Holding:
     def __init__(self, symbol: str):
-        """
-        Initializes the required variables for the Client
-
-        Args:
-            token (str): API key from FinancialModelPrep
-        """
         self.symbol = symbol
         self.nb_shares = 0
         self.avg_price = 0
         self.current_price = 0
 
-    def add_shares(self, nb_shares: float, price: float):
+    def add_shares(self, nb_shares: float, price: float) -> float:
         """
+        Add a certain amount of shares at a specific price to your holdings
         Args:
             nb_shares: Number of new shares
             price: Price of the new shares
-        Return: Number of shares owned
+        Returns: Number of shares owned
         """
         new_nb_shares = self.nb_shares + nb_shares
         if new_nb_shares == 0:

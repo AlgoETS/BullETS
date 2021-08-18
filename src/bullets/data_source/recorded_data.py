@@ -1,14 +1,10 @@
 from bullets.data_source.data_source_interface import Resolution
 
+__all__ = ["Stock", "PricePoint", "IncomeStatement", "BalanceSheetStatement", "CashFlowStatement"]
+
 
 class Stock:
     def __init__(self, symbol: str, resolution: Resolution):
-        """
-        Initializes the required variable for the Stock
-        Args:
-            symbol (str): Unique identifier of a stock
-            resolution (Resolution): Time jumps between ticker data
-        """
         self.symbol = symbol
         self.resolution = resolution
         self.price_points = {}
