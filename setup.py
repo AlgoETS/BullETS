@@ -20,5 +20,6 @@ setup(
     url='https://github.com/AlgoETS/BullETS',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
-    install_requires=requirements
+    install_requires=requirements,
+    include_package_data=True
 )
