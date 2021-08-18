@@ -12,17 +12,6 @@ class Status(Enum):
 class Transaction:
     def __init__(self, symbol: str, nb_shares: float, theoretical_price: float, simulated_price: float,
                  timestamp: datetime, cash_balance: float, status: Status, transaction_fees: int, order_type: str):
-        """
-        Args:
-            symbol (str): symbol for the stock (i.e. AAPL)
-            nb_shares (float): Number of shares
-            theoretical_price (float): Theoretical price of the shares
-            simulated_price (float): Simulated price (with slippage) of the shares
-            timestamp: Time of the transaction
-            cash_balance: The portfolio's cash balance at the time of the transaction
-            status : Status of the transaction
-            transaction_fees: Fees of the transaction
-        """
         self.symbol = symbol
         self.nb_shares = nb_shares
         self.theoretical_price = theoretical_price
