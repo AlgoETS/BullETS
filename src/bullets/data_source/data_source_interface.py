@@ -4,8 +4,6 @@ import aiohttp
 import asyncio
 from enum import Enum
 
-__all__ = ["Resolution", "DataSourceInterface"]
-
 
 class Resolution(Enum):
     DAILY = "1day"

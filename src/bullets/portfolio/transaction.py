@@ -2,8 +2,6 @@ from datetime import datetime
 from enum import Enum
 from bullets import logger
 
-__all__ = ["Status", "Transaction"]
-
 
 class Status(Enum):
     SUCCESSFUL = "Successful"

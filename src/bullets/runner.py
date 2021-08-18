@@ -5,8 +5,6 @@ from bullets.data_source.data_source_interface import Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
 
-__all__ = ["Runner"]
-
 
 class Runner:
     def __init__(self, strategy: Strategy):

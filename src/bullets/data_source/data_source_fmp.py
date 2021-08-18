@@ -4,8 +4,6 @@ from datetime import datetime, date, timedelta
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.data_source.recorded_data import *
 
-__all__ = ["FmpDataSource"]
-
 
 class FmpDataSource(DataSourceInterface):
     URL_BASE_FMP = 'https://financialmodelingprep.com/api/v3/'

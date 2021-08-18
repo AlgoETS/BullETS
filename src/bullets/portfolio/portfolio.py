@@ -4,8 +4,6 @@ from bullets.data_source.data_source_interface import DataSourceInterface, Resol
 from bullets.portfolio.holding import Holding
 from bullets.portfolio.transaction import Transaction, Status
 
-__all__ = ["Order", "Portfolio"]
-
 
 class Order:
     def __init__(self, symbol, nb_shares, price):

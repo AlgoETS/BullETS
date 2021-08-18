@@ -4,8 +4,6 @@ from bullets.portfolio.portfolio import Portfolio
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets import logger
 
-__all__ = ["Strategy"]
-
 
 class Strategy:
     def __init__(self, resolution: Resolution, start_time: datetime, end_time: datetime, starting_balance: float,
