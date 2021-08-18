@@ -6,7 +6,7 @@ Please keep in mind that you must respect the code of conduct at all times when 
 
 ## Version control branching
 - Always make a new branch for your work. You will then be able to create a pull request that will have to be reviewed by other contributors in order to merge your work.
-- New features and bugfixes should branch off of the  `main` branch.
+- New features and bugfixes should branch off of the `develop` branch.
 - Include your issue number in your commits (e.g. `#16 - Added validation for strategy starting data`)
 - Each pull request/branch should only include changes from **one** issue, otherwise it may be rejected.
 

@@ -1,10 +1,9 @@
-from bullets.portfolio.transaction import Transaction
-from bullets.strategy import Strategy, Resolution
-from bullets.data_source.data_source_fmp import FmpDataSource
 from datetime import datetime, timedelta
+from bullets.portfolio.transaction import Status
+from bullets.strategy import Strategy
+from bullets.data_source.data_source_interface import Resolution
+from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
-
-__all__ = ["Runner"]
 
 
 class Runner:
@@ -14,28 +13,21 @@ class Runner:
 
     def start(self):
         """
-        Starts the backtest
+        Starts running the backtest
         """
         if self.strategy is None:
             raise TypeError("No strategy was attached to the runner.")
-
-        moments = self.get_moments(self.strategy.resolution, self.strategy.start_time, self.strategy.end_time)
-
+        logger.info("=========== Backtest started ===========")
+        self.strategy.on_start()
+        moments = self._get_moments(self.strategy.resolution, self.strategy.start_time, self.strategy.end_time)
         for moment in moments:
             self.strategy.update_time(moment)
             self.strategy.on_resolution()
+            self.strategy.portfolio.on_resolution()
+        self._post_backtest_log()
+        self.strategy.on_finish()
 
-        self.post_backtest_log()
-
-    def get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
-        """
-        Gets the all the moments of the backtest
-        Args:
-            resolution: Resolution of the backtest
-            start_time: DateTime at which the backtest starts
-            end_time: DateTime at which the backtest end
-        Returns: List of tradeable datetimes given the interval and resolutions
-        """
+    def _get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         moments = []
         current_time = start_time
 
@@ -47,20 +39,13 @@ class Runner:
             elif resolution == Resolution.MINUTE:
                 current_time = current_time + timedelta(minutes=1)
 
-            if self.is_market_open(current_time, resolution):
+            if self._is_market_open(current_time, resolution):
                 moments.append(current_time)
 
         return moments
 
-    def is_market_open(self, time: datetime, resolution: Resolution) -> bool:
-        """
-        Determines if the market is open at the specified time
-        Args:
-            resolution: Resolution used by the strategy
-            time: Datetime to verify
-
-        Returns: True if the market is open, False if the market is closed
-        """
+    @staticmethod
+    def _is_market_open(time: datetime, resolution: Resolution) -> bool:
         if time.weekday() >= 5:
             return False
 
@@ -74,31 +59,19 @@ class Runner:
 
         return True
 
-    def post_backtest_log(self):
-        """
-        Logs all the statistics necessary to see the backtest performance
-        """
-        self.update_final_timestamp()
-        logger.info("=========== Transactions ===========")
-        for transaction in self.strategy.portfolio.transactions:
-            logger.info(str(transaction.timestamp) + " - " + transaction.symbol + ", " + str(transaction.nb_shares) +
-                        " shares | " + transaction.status)
-        logger.info("\n=========== Final Stats ===========")
+    def _post_backtest_log(self):
+        self._update_final_timestamp()
+        logger.info("=========== Backtest complete ===========")
         logger.info("Initial Cash : " + str(self.strategy.starting_balance))
         logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
         logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
         logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
         if isinstance(self.strategy.data_source, FmpDataSource):
             logger.info("Remaining FMP Calls :  " + str(self.strategy.data_source.get_remaining_calls()))
-        logger.info("Backtest complete")
 
-    def update_final_timestamp(self):
-        """
-        Changes the current timestamp to the last timestamp where we have stock info to be able to calculate final stats
-        """
+    def _update_final_timestamp(self):
         final_timestamp = self.strategy.start_time
         for transaction in self.strategy.portfolio.transactions:
-            if transaction.status != Transaction.STATUS_FAILED_SYMBOL_NOT_FOUND \
-                    and transaction.timestamp > final_timestamp:
+            if transaction.status != Status.FAILED_SYMBOL_NOT_FOUND and transaction.timestamp > final_timestamp:
                 final_timestamp = transaction.timestamp
         self.strategy.update_time(final_timestamp)
