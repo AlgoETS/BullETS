@@ -21,5 +21,6 @@ setup(
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     install_requires=requirements,
+    package_data={'': ['requirements.txt']},
     include_package_data=True
 )
