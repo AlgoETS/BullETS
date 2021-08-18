@@ -14,12 +14,12 @@ setup(
     description='BullETS is a Python package designed to help with the development of algorithmic trading strategies.',
     long_description=readme,
     long_description_content_type='text/markdown',
-    version='0.0.2',
+    version='0.0.3',
     license='Apache 2.0',
     python_requires='>=3.7',
     url='https://github.com/AlgoETS/BullETS',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     install_requires=requirements,
-    package_data={'': ['requirements.txt']}
+    include_package_data=True
 )
