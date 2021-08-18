@@ -1,5 +1,9 @@
 from setuptools import setup, find_packages
 
+requirements = []
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 readme = ''
 with open('README.md') as f:
     readme = f.read()
@@ -16,6 +20,6 @@ setup(
     url='https://github.com/AlgoETS/BullETS',
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
-    package_data={'': ['requirements.txt']},
-    include_package_data=True
+    install_requires=requirements,
+    package_data={'': ['requirements.txt']}
 )
