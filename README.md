@@ -63,7 +63,7 @@ class MyStrategy(Strategy):
 
     # Redefine this function to perform a task when the strategy starts
     def on_start(self):
-        self.portfolio.market_order("AAPL", 5)
+        pass
 
     # Redefine this function to perform a task on each resolution
     def on_resolution(self):
@@ -71,7 +71,7 @@ class MyStrategy(Strategy):
 
     # Redefine this function to perform a task at the end of the strategy
     def on_finish(self):
-        self.portfolio.market_order("AAPL", 5)
+        pass
 
         
 # Initialize your new strategy
