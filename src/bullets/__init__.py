@@ -1,4 +1,3 @@
-from bullets.data_source import *
 from bullets.portfolio import *
 from bullets.logger import *
 from bullets.runner import *
