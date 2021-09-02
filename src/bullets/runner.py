@@ -25,8 +25,8 @@ class Runner:
             self.strategy.update_time(moment)
             self.strategy.on_resolution()
             self.strategy.portfolio.on_resolution()
-        self._post_backtest_log()
         self.strategy.on_finish()
+        self._post_backtest_log()
 
     def _get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         moments = []
