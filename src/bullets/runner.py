@@ -18,14 +18,15 @@ class Runner:
         if self.strategy is None:
             raise TypeError("No strategy was attached to the runner.")
         logger.info("=========== Backtest started ===========")
-        self.strategy.on_start()
         moments = self._get_moments(self.strategy.resolution, self.strategy.start_time, self.strategy.end_time)
+        self.strategy.update_time(moments[0])
+        self.strategy.on_start()
         for moment in moments:
             self.strategy.update_time(moment)
             self.strategy.on_resolution()
             self.strategy.portfolio.on_resolution()
-        self._post_backtest_log()
         self.strategy.on_finish()
+        self._post_backtest_log()
 
     def _get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         moments = []
