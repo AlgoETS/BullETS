@@ -16,6 +16,10 @@ class Transaction:
         self.nb_shares = nb_shares
         self.theoretical_price = theoretical_price
         self.simulated_price = simulated_price
+        if simulated_price is None or nb_shares is None:
+            self.total_price = None
+        else:
+            self.total_price = nb_shares * simulated_price
         self.timestamp = timestamp
         self.cash_balance = cash_balance
         self.status = status
