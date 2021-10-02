@@ -67,9 +67,6 @@ class Strategy:
         if not isinstance(self.data_source, DataSourceInterface):
             raise TypeError("Invalid strategy data source type")
 
-        if self.output_folder is None or self.output_folder == "":
-            raise ValueError("Invalid strategy output folder")
-
         if self.starting_balance is None or self.starting_balance <= 0:
             raise ValueError("Strategy starting balance should be positive")
 
@@ -78,3 +75,6 @@ class Strategy:
 
         if self.transaction_fees is None or self.transaction_fees < 0:
             raise ValueError("Transaction fees should be positive or 0")
+
+        if self.output_folder is None or self.output_folder == "":
+            raise ValueError("Invalid strategy output folder")
