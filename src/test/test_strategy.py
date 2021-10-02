@@ -69,7 +69,8 @@ class TestStrategy(Strategy):
 
     def on_start(self):
         symbols = self.data_source.get_symbol_list()
-        statements = self.data_source.get_income_statements_list()
+        statements = self.data_source.get_income_statement_list()
+        tradables = self.data_source.get_tradable_symbol_list()
 
     def on_resolution(self):
         self.portfolio.market_order("AAPL", 5)
