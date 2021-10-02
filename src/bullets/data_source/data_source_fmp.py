@@ -124,6 +124,15 @@ class FmpDataSource(DataSourceInterface):
         response = self.request(url)
         return json.loads(response)
 
+    def get_income_statements_list(self) -> list:
+        """
+        Gets all the stocks with income statements available in FMP
+        Returns: A list (symbol) of all the stocks with available income statements
+        """
+        url = self.URL_BASE_FMP + "financial-statement-symbol-lists?apikey=" + self.token
+        response = self.request(url)
+        return json.loads(response)
+
     def get_remaining_calls(self) -> int:
         """
         Gets the amount of remaining calls from the fmp datasource, this number comes directly from fmp and is not
