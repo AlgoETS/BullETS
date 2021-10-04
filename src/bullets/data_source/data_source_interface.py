@@ -1,3 +1,4 @@
+import ssl
 from datetime import datetime
 from abc import abstractmethod
 import aiohttp
@@ -41,7 +42,7 @@ class DataSourceInterface:
         async def fetch() -> str:
             if url:
                 async with aiohttp.ClientSession() as session:
-                    async with session.request(url=url, method=method, json=body) as response:
+                    async with session.request(url=url, method=method, ssl=ssl.SSLContext(), json=body) as response:
                         if response.status == 200:
                             return await response.text()
 
