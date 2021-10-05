@@ -2,6 +2,7 @@ from bullets.data_source.data_source_interface import DataSourceInterface, Resol
 from bullets.runner import Runner
 from datetime import datetime, timedelta
 
+import math
 
 class Indicators:
     def __init__(self, data_source: DataSourceInterface):
@@ -111,3 +112,50 @@ class Indicators:
             date = date
 
         return self.ema(symbol, 12, date) - self.ema(symbol, 26, date)
+
+
+
+    def stdDev(self, symbol: str, period: int, date: datetime = None, smoothing: int = 2):
+        stdDev = 0.0
+        differences = []
+        variance = 0.0
+        ema = Indicators.ema(symbol,period,date,smoothing)
+        # table of market price for each day in the period
+        values = []
+
+        for x in range(period):
+            # Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date -= timedelta(days=1)
+
+            ##Go back one day
+            date -= timedelta(days=1)
+
+        for x in range(period):
+            # Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date += timedelta(days=1)
+
+            # fill each value
+            price = self.data_source.get_price(symbol=symbol, timestamp=date)
+            if price is not None:
+                values.append(price)
+            ##Go forward one day
+            date += timedelta(days=1)
+
+
+        # calculate difference between each value and ema
+        for x in differences:
+            differences[x] = values[x] - ema
+            differences[x] = differences[x] * differences[x]
+            variance += differences[x]
+
+        # calculate variance
+        variance = variance / len(differences)
+
+        #calculate standard deviation
+        stdDev = math.sqrt(variance)
+
+        return stdDev
+
+
