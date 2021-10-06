@@ -143,7 +143,6 @@ class Indicators:
             ##Go forward one day
             date += timedelta(days=1)
 
-
         # calculate difference between each value and ema
         for x in differences:
             differences[x] = values[x] - ema
