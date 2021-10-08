@@ -64,11 +64,23 @@ class TestPortfolio(unittest.TestCase):
         datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
         self.assertEqual(55256000000, datasource.get_cash_flow_statement("AAPL", date(2019, 9, 28)).net_income)
 
+    def test_symbol_list(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_symbol_list()))
+
+    def test_income_statement_list(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(True, 'AAPL' in datasource.get_income_statement_list())
+
+    def test_tradable_symbol_list(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_tradable_symbol_list()))
+
 
 class TestStrategy(Strategy):
 
     def on_start(self):
-        symbols = self.data_source.get_symbol_list()
+        pass
 
     def on_resolution(self):
         self.portfolio.market_order("AAPL", 5)
