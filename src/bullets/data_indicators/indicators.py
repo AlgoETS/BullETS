@@ -51,7 +51,7 @@ class Indicators:
         sma = sum(values) / len(values)
 
         return sma
-    
+
     def wma(self, symbol: str, period: int, date: datetime = None):
         """
         Calculates the Weight Moving Average
@@ -96,6 +96,7 @@ class Indicators:
                 wma += price * current_weight
 
             # Go forward one day
+            #
             date += timedelta(days=1)
 
         return wma
