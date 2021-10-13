@@ -51,6 +51,54 @@ class Indicators:
         sma = sum(values) / len(values)
 
         return sma
+    
+    def wma(self, symbol: str, period: int, date: datetime = None):
+        """
+        Calculates the Weight Moving Average
+        Args:
+            symbol: Stock symbol
+            period: number of days for the average
+            date: Date of average / start date
+        Returns:
+            wma: Average stock price weight for the given range
+        """
+        if date is None:
+            date = self.data_source.timestamp
+        else:
+            date = date
+
+        weight_total = 0
+
+        wma = 0
+
+        for x in range(period):
+            weight_total += x + 1
+
+        for x in range(period):
+            # Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date -= timedelta(days=1)
+
+            # Go back one day
+            date -= timedelta(days=1)
+
+        for x in range(period):
+            # Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date += timedelta(days=1)
+
+            # Fetch stock value
+            price = self.data_source.get_price(symbol=symbol, timestamp=date)
+
+            if price is not None:
+                current_weight = ((x + 1) / weight_total)
+                print("Price: ", price, " Weight: ", x + 1, " / ", weight_total, " = ", current_weight)
+                wma += price * current_weight
+
+            # Go forward one day
+            date += timedelta(days=1)
+
+        return wma
 
     def ema(self, symbol: str, period: int, date: datetime = None, smoothing: int = 2):
         """
