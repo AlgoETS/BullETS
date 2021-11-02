@@ -1,12 +1,21 @@
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.runner import Runner
 from datetime import datetime, timedelta
-
 import math
+
 
 class Indicators:
     def __init__(self, data_source: DataSourceInterface):
         self.data_source = data_source
+
+    def market_timedelta(self, date, period):
+        for x in range(abs(period)):
+            #Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date += (period/abs(period))*timedelta(days=1)
+
+            ##Go back one day
+            date += (period/abs(period))*timedelta(days=1)
 
     def sma(self, symbol: str, period: int, date: datetime = None):
         """
@@ -14,7 +23,7 @@ class Indicators:
         Args:
             symbol: Stock symbol
             period: number of days for the average
-            date: Date of average / start date
+            date: Date of average / start date. If no value is given the function will use the date of the backtest
         Returns:
             sma: Average stock price for the given range
         """
@@ -26,13 +35,7 @@ class Indicators:
 
         values = []
 
-        for x in range(period):
-            #Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
-                date -= timedelta(days=1)
 
-            ##Go back one day
-            date -= timedelta(days=1)
 
         for x in range(period):
             # Make sure market is open
@@ -103,11 +106,11 @@ class Indicators:
 
     def ema(self, symbol: str, period: int, date: datetime = None, smoothing: int = 2):
         """
-        Calculates the Simple Moving Average
+        Calculates the Exponential Moving Average
         Args:
             symbol: Stock symbol
             period: number of days for the average
-            date: Date of average / start date
+            date: Date of average / start date. If no value is given the function will use the date of the backtest
             smoothing: weighted importance of latest data, higher number gives more weight to more recent data
         Returns:
             ema: Exponential average stock price for the given range
@@ -147,10 +150,10 @@ class Indicators:
 
     def macd(self, symbol, date: datetime = None):
         """
-        Calculates the Simple Moving Average
+        Calculates the Moving Average Converging/Diverging
         Args:
             symbol: Stock symbol
-            date: Calculated date / start date
+            date: Date of average / start date. If no value is given the function will use the date of the backtest
         Returns:
             MACD
         """
@@ -162,13 +165,19 @@ class Indicators:
 
         return self.ema(symbol, 12, date) - self.ema(symbol, 26, date)
 
-
-
-    def stdDev(self, symbol: str, period: int, date: datetime = None, smoothing: int = 2):
-        stdDev = 0.0
+    def std_dev(self, symbol: str, period: int, date: datetime = None):
+        """
+        Calculates the Exponential Moving Average
+        Args:
+            symbol: Stock symbol
+            period: number of days for the average
+            date: Date of average / start date. If no value is given the function will use the date of the backtest
+        Returns:
+            std_dev
+        """
         differences = []
-        variance = 0.0
-        ema = Indicators.ema(symbol,period,date,smoothing)
+        sum_squared = 0.0
+        sma = self.sma(symbol, period, date)
         # table of market price for each day in the period
         values = []
 
@@ -194,16 +203,15 @@ class Indicators:
 
         # calculate difference between each value and ema
         for x in differences:
-            differences[x] = values[x] - ema
-            differences[x] = differences[x] * differences[x]
-            variance += differences[x]
+            differences[x] = values[x] - sma
+            sum_squared += differences[x] * differences[x]
 
         # calculate variance
-        variance = variance / len(differences)
+        variance = sum_squared / len(differences)
 
-        #calculate standard deviation
-        stdDev = math.sqrt(variance)
+        # calculate standard deviation
+        std_dev = math.sqrt(variance)
 
-        return stdDev
+        return std_dev
 
 
