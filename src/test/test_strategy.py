@@ -72,8 +72,8 @@ class TestStrategy(Strategy):
         self.indicators = Indicators(self.data_source)
 
     def on_resolution(self):
-        macd = self.indicators.macd("AAPL")
-        print(macd)
+        rsi = self.indicators.rsi("AAPL")
+        print(rsi)
         pass
 
     def on_finish(self):

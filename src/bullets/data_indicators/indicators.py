@@ -35,9 +35,18 @@ class Indicators:
 
         values = []
 
+        for x in range(period):
+            # Go back one day
+            date -= timedelta(days=1)
 
+            # Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date -= timedelta(days=1)
 
         for x in range(period):
+            ##Go forward one day
+            date += timedelta(days=1)
+
             # Make sure market is open
             while not Runner._is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
@@ -46,9 +55,6 @@ class Indicators:
             price = self.data_source.get_price(symbol=symbol, timestamp=date)
             if price is not None:
                 values.append(price)
-
-            ##Go forward one day
-            date += timedelta(days=1)
 
         #Calculate SMA
         sma = sum(values) / len(values)
@@ -78,14 +84,17 @@ class Indicators:
             weight_total += x + 1
 
         for x in range(period):
+            # Go back one day
+            date -= timedelta(days=1)
+
             # Make sure market is open
             while not Runner._is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
-            # Go back one day
-            date -= timedelta(days=1)
-
         for x in range(period):
+            # Go forward one day
+            date += timedelta(days=1)
+
             # Make sure market is open
             while not Runner._is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
@@ -97,10 +106,6 @@ class Indicators:
                 current_weight = ((x + 1) / weight_total)
                 print("Price: ", price, " Weight: ", x + 1, " / ", weight_total, " = ", current_weight)
                 wma += price * current_weight
-
-            # Go forward one day
-            #
-            date += timedelta(days=1)
 
         return wma
 
@@ -124,17 +129,19 @@ class Indicators:
         multiplier = smoothing/(period + 1)
 
         for x in range(period):
+            ##Go back one day
+            date -= timedelta(days=1)
+
             #Make sure market is open
             while not Runner._is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
-            ##Go back one day
-            date -= timedelta(days=1)
-
         ema = self.sma(symbol, period, date)
-        date += timedelta(days=1)
 
         for x in range(period):
+            ##Go forward one day
+            date += timedelta(days=1)
+
             # Make sure market is open
             while not Runner._is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
@@ -142,9 +149,6 @@ class Indicators:
             price = self.data_source.get_price(symbol=symbol, timestamp=date)
             if price is not None:
                 ema = price*multiplier + ema*(1-multiplier)
-
-            ##Go forward one day
-            date += timedelta(days=1)
 
         return ema
 
@@ -155,7 +159,7 @@ class Indicators:
             symbol: Stock symbol
             date: Date of average / start date. If no value is given the function will use the date of the backtest
         Returns:
-            MACD
+            macd
         """
 
         if date is None:
@@ -163,7 +167,63 @@ class Indicators:
         else:
             date = date
 
-        return self.ema(symbol, 12, date) - self.ema(symbol, 26, date)
+        macd = self.ema(symbol, 12, date) - self.ema(symbol, 26, date)
+
+        return macd
+
+    def rsi(self, symbol: str, period: int = 14, date: datetime = None):
+        """
+        Calculates the Relative Strength Index
+        Args:
+            symbol: Stock symbol
+            period: number of days for the average
+            date: Date of average / start date. If no value is given the function will use the date of the backtest
+        Returns:
+            rsi
+        """
+
+        if date is None:
+            date = self.data_source.timestamp
+        else:
+            date = date
+
+        total_gain = 0
+        total_loss = 0
+
+        for x in range(period):
+            ##Go back one day
+            date -= timedelta(days=1)
+
+            # Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date -= timedelta(days=1)
+
+        for x in range(period):
+            ##Go forward one day
+            date += timedelta(days=1)
+
+            # Make sure market is open
+            while not Runner._is_market_open(date, Resolution.DAILY):
+                date += timedelta(days=1)
+
+            # fill each value
+            open = self.data_source.get_price(symbol=symbol, timestamp=date, value="open")
+            close = self.data_source.get_price(symbol=symbol, timestamp=date, value="close")
+            if open is not None and close is not None:
+                daily_percent = (close - open) / open
+                if daily_percent > 0:
+                    total_gain += daily_percent
+                else:
+                    total_loss += daily_percent
+
+        if total_gain <= 0:
+            return 0
+        elif total_loss >= 0:
+            return 100
+
+        rsi = 100 - 100 / (1 - total_gain / total_loss)
+
+        return rsi
 
     def std_dev(self, symbol: str, period: int, date: datetime = None):
         """
@@ -182,14 +242,17 @@ class Indicators:
         values = []
 
         for x in range(period):
+            ##Go back one day
+            date -= timedelta(days=1)
+
             # Make sure market is open
             while not Runner._is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
-            ##Go back one day
-            date -= timedelta(days=1)
-
         for x in range(period):
+            ##Go forward one day
+            date += timedelta(days=1)
+
             # Make sure market is open
             while not Runner._is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
@@ -198,8 +261,6 @@ class Indicators:
             price = self.data_source.get_price(symbol=symbol, timestamp=date)
             if price is not None:
                 values.append(price)
-            ##Go forward one day
-            date += timedelta(days=1)
 
         # calculate difference between each value and ema
         for x in differences:
@@ -213,5 +274,3 @@ class Indicators:
         std_dev = math.sqrt(variance)
 
         return std_dev
-
-
