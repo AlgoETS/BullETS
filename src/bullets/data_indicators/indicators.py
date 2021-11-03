@@ -263,8 +263,8 @@ class Indicators:
                 values.append(price)
 
         # calculate difference between each value and ema
-        for x in differences:
-            differences[x] = values[x] - sma
+        for x in range(len(values)):
+            differences.append(values[x] - sma)
             sum_squared += differences[x] * differences[x]
 
         # calculate variance
@@ -274,3 +274,31 @@ class Indicators:
         std_dev = math.sqrt(variance)
 
         return std_dev
+
+    def bollinger_bands(self, symbol: str, period: int = 20, mult: int = 2, date: datetime = None):
+        """
+        Bollinger Bands are computed based on standard deviations on the SMA.
+        Args:
+            symbol: Stock symbol
+            period:
+            date:
+        Returns:
+            bollingerBands: Upper Band and Lower Band
+        """
+
+        if date is None:
+            date = self.data_source.timestamp
+        else:
+            date = date
+
+        # Simple Moving Average
+        mean = self.sma(symbol, period, date)
+        # Standard Deviation
+        std_dev = self.std_dev(symbol, period, date)
+
+        # Calculates Upper Band (sma 20 + 2 std dev)
+        upper_band = mean + (mult * std_dev)
+        # Calculates Lower Band (sma 20 - 2 std dev)
+        lower_band = mean - (mult * std_dev)
+
+        return lower_band, upper_band
