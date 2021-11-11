@@ -13,7 +13,7 @@ def nth_day_of_nth_week(date: datetime, nth_week: int, week_day: int) -> datetim
     return temp_date
 
 
-def calc_good_friday(year) -> datetime:
+def calc_good_friday(year: int) -> datetime:
     a = year % 19
     b = year // 100
     c = year % 100
