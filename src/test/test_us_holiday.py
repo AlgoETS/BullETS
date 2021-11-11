@@ -41,5 +41,9 @@ class TestUsHoliday(unittest.TestCase):
         date = datetime(2023, 12, 25)
         self.assertEqual(True, date in us_holiday_list(date.year))
 
+    def test_good_friday(self):
+        date = datetime(2023, 4, 7)
+        self.assertEqual(True, date in us_holiday_list(date.year))
+
 if __name__ == '__main__':
     unittest.main()
