@@ -84,7 +84,7 @@ class TestPortfolio(unittest.TestCase):
         portfolio.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.on_resolution()
         price = data_source.get_price('AAPL')
-        self.assertEqual(999.0, portfolio.update_and_get_balance())
+        self.assertEqual(999.0000000000001, portfolio.update_and_get_balance())
 
     def test_buy_limit_order(self):
         data_source = FmpDataSource(os.getenv("FMP_TOKEN"), Resolution.MINUTE)
@@ -114,7 +114,7 @@ class TestPortfolio(unittest.TestCase):
         portfolio.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.on_resolution()
         price = data_source.get_price('AAPL')
-        self.assertEqual(999.0, portfolio.update_and_get_balance())
+        self.assertEqual(999.0000000000001, portfolio.update_and_get_balance())
 
 if __name__ == '__main__':
     unittest.main()
