@@ -8,15 +8,6 @@ class Indicators:
     def __init__(self, data_source: DataSourceInterface):
         self.data_source = data_source
 
-    def market_timedelta(self, date, period):
-        for x in range(abs(period)):
-            #Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
-                date += (period/abs(period))*timedelta(days=1)
-
-            ##Go back one day
-            date += (period/abs(period))*timedelta(days=1)
-
     def sma(self, symbol: str, period: int, date: datetime = None):
         """
         Calculates the Simple Moving Average

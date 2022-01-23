@@ -3,6 +3,11 @@ from bullets.portfolio.transaction import Status
 from bullets.strategy import Strategy
 from bullets.data_source.data_source_interface import Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
+from datetime import datetime, timedelta
+from bullets.portfolio.transaction import Status
+from bullets.strategy import Strategy
+from bullets.data_source.data_source_interface import Resolution
+from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
 
 
