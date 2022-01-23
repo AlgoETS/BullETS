@@ -4,6 +4,7 @@ from bullets.strategy import Strategy
 from bullets.data_source.data_source_interface import Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
+from bullets.utils.holiday_date_util import us_holiday_list
 
 
 class Runner:
@@ -46,19 +47,19 @@ class Runner:
         return moments
 
     @staticmethod
-    def _is_market_open(time: datetime, resolution: Resolution) -> bool:
-        if time.weekday() >= 5:
+    def _is_market_open(date: datetime, resolution: Resolution) -> bool:
+        if date.weekday() >= 5:
             return False
 
         if resolution != Resolution.DAILY:
-            if time.hour < 9 or time.hour > 16:
+            if date.hour < 9 or date.hour > 16:
                 return False
-            elif time.hour == 16 and time.minute > 0:
+            elif date.hour == 16 and date.minute > 0:
                 return False
-            elif time.hour == 9 and time.minute < 30:
+            elif date.hour == 9 and date.minute < 30:
                 return False
 
-        return True
+        return date not in us_holiday_list(date.year)
 
     def _post_backtest_log(self):
         self._update_final_timestamp()

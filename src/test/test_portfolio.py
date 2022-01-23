@@ -116,5 +116,6 @@ class TestPortfolio(unittest.TestCase):
         price = data_source.get_price('AAPL')
         self.assertEqual(999.0000000000001, portfolio.update_and_get_balance())
 
+
 if __name__ == '__main__':
     unittest.main()
