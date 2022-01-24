@@ -68,6 +68,10 @@ class TestPortfolio(unittest.TestCase):
         datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
         self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_symbol_list()))
 
+    def test_forex_currency_pairs_list(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(True, any(item['symbol'] == 'JPYUSD' for item in datasource.get_forex_currency_pairs_list()))
+
     def test_income_statement_list(self):
         datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
         self.assertEqual(True, 'AAPL' in datasource.get_income_statement_list())
