@@ -154,6 +154,14 @@ class TestStrategy(unittest.TestCase):
         finally:
             pass
 
+    def test_forex_currency_pairs_list(self):
+        try:
+            datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+            self.assertEqual(True, any(item['symbol'] == 'JPYUSD' for item in datasource.get_forex_currency_pairs_list()))
+            logger.info("Forex currency pairs list test successful")
+        finally:
+            pass
+
     def test_tradable_symbol_list(self):
         try:
             datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
