@@ -33,69 +33,134 @@ class TestStrategy(unittest.TestCase):
     logger.suppress_logs()
     runner = Runner(strategy)
     runner.start()
+    logger.reactivate_logs()
 
     def test_strategy_start_balance(self):
-        self.assertEqual(5000, self.strategy.portfolio.start_balance)
+        try:
+            self.assertEqual(5000, self.strategy.portfolio.start_balance)
+            logger.info("Strategy start balance test successful")
+        finally:
+            pass
 
-    def test_strategy_final_balance(self):
-        self.assertEqual(5458.0374725, self.strategy.portfolio.update_and_get_balance())
+    def test_strategy_final_investment_balance(self):
+        try:
+            self.assertEqual(5458.0374725, self.strategy.portfolio.update_and_get_balance())
+            logger.info("Strategy final investment balance test successful")
+        finally:
+            pass
 
     def test_strategy_final_cash_balance(self):
-        self.assertEqual(89.12497250000004, self.strategy.portfolio.cash_balance)
+        try:
+            self.assertEqual(89.12497250000004, self.strategy.portfolio.cash_balance)
+            logger.info("Strategy final cash balance test successful")
+        finally:
+            pass
 
     def test_strategy_final_percentage_profit(self):
-        self.assertEqual(9.16, self.strategy.portfolio.get_percentage_profit())
+        try:
+            self.assertEqual(9.16, self.strategy.portfolio.get_percentage_profit())
+            logger.info("Strategy final percentage profit test successful")
+        finally:
+            pass
 
     def test_strategy_final_transaction_count(self):
-        self.assertEqual(33, len(self.strategy.portfolio.transactions))
+        try:
+            self.assertEqual(33, len(self.strategy.portfolio.transactions))
+            logger.info("Strategy final transaction count test successful")
+        finally:
+            pass
 
     def test_strategy_none_date(self):
-        self.assertRaisesRegex(TypeError, "Invalid strategy date type", ActualStrategy,
-                               self.RESOLUTION, None, None, self.STARTING_BALANCE,
-                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+        try:
+            self.assertRaisesRegex(TypeError, "Invalid strategy date type", ActualStrategy,
+                                   self.RESOLUTION, None, None, self.STARTING_BALANCE,
+                                   FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+            logger.info("Invalid strategy date type test successful")
+        finally:
+            pass
 
     def test_strategy_invalid_date(self):
-        self.assertRaisesRegex(ValueError, "Strategy start time has to be before end time", ActualStrategy,
-                               self.RESOLUTION, self.END_TIME, self.START_TIME, self.STARTING_BALANCE,
-                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+        try:
+            self.assertRaisesRegex(ValueError, "Strategy start time has to be before end time", ActualStrategy,
+                                   self.RESOLUTION, self.END_TIME, self.START_TIME, self.STARTING_BALANCE,
+                                   FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+            logger.info("Invalid strategy start time & end time test successful")
+        finally:
+            pass
 
     def test_strategy_none_resolution(self):
-        self.assertRaisesRegex(TypeError, "Invalid strategy resolution type", ActualStrategy,
-                               None, self.START_TIME, self.END_TIME, self.STARTING_BALANCE,
-                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+        try:
+            self.assertRaisesRegex(TypeError, "Invalid strategy resolution type", ActualStrategy,
+                                   None, self.START_TIME, self.END_TIME, self.STARTING_BALANCE,
+                                   FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+            logger.info("Invalid strategy resolution type test successful")
+        finally:
+            pass
 
     def test_strategy_none_data_source(self):
-        self.assertRaisesRegex(TypeError, "Invalid strategy data source type", ActualStrategy,
-                               self.RESOLUTION, self.START_TIME, self.END_TIME, self.STARTING_BALANCE, None)
+        try:
+            self.assertRaisesRegex(TypeError, "Invalid strategy data source type", ActualStrategy,
+                                   self.RESOLUTION, self.START_TIME, self.END_TIME, self.STARTING_BALANCE, None)
+            logger.info("Invalid strategy data source test successful")
+        finally:
+            pass
 
     def test_strategy_invalid_balance(self):
-        self.assertRaisesRegex(ValueError, "Strategy starting balance should be positive", ActualStrategy,
-                               self.RESOLUTION, self.START_TIME, self.END_TIME, self.STARTING_BALANCE * -1,
-                               FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+        try:
+            self.assertRaisesRegex(ValueError, "Strategy starting balance should be positive", ActualStrategy,
+                                   self.RESOLUTION, self.START_TIME, self.END_TIME, self.STARTING_BALANCE * -1,
+                                   FmpDataSource(self.FMP_TOKEN, self.RESOLUTION))
+            logger.info("Invalid strategy balance test successful")
+        finally:
+            pass
 
-    def test_income_statements(self):
-        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
-        self.assertEqual(2.9925, datasource.get_income_statement("AAPL", date(2019, 9, 28)).eps)
-
-    def test_balance_sheet_statements(self):
-        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
-        self.assertEqual(4106000000, datasource.get_balance_sheet_statement("AAPL", date(2019, 9, 28)).inventory)
-
-    def test_cash_flow_statements(self):
-        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
-        self.assertEqual(55256000000, datasource.get_cash_flow_statement("AAPL", date(2019, 9, 28)).net_income)
-
-    def test_symbol_list(self):
-        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
-        self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_symbol_list()))
+    def test_income_statement(self):
+        try:
+            datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+            self.assertEqual(2.9925, datasource.get_income_statement("AAPL", date(2019, 9, 28)).eps)
+            logger.info("Income statement test successful")
+        finally:
+            pass
 
     def test_income_statement_list(self):
-        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
-        self.assertEqual(True, 'AAPL' in datasource.get_income_statement_list())
+        try:
+            datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+            self.assertEqual(True, 'AAPL' in datasource.get_income_statement_list())
+            logger.info("Income statement list test successful")
+        finally:
+            pass
+
+    def test_balance_sheet_statements(self):
+        try:
+            datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+            self.assertEqual(4106000000, datasource.get_balance_sheet_statement("AAPL", date(2019, 9, 28)).inventory)
+            logger.info("Balance sheet statements test successful")
+        finally:
+            pass
+
+    def test_cash_flow_statements(self):
+        try:
+            datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+            self.assertEqual(55256000000, datasource.get_cash_flow_statement("AAPL", date(2019, 9, 28)).net_income)
+            logger.info("Cash flow statements test successful")
+        finally:
+            pass
+
+    def test_symbol_list(self):
+        try:
+            datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+            self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_symbol_list()))
+            logger.info("Symbol list test successful")
+        finally:
+            pass
 
     def test_tradable_symbol_list(self):
-        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
-        self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_tradable_symbol_list()))
+        try:
+            datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+            self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_tradable_symbol_list()))
+            logger.info("Tradable symbol list test successful")
+        finally:
+            pass
 
 
 if __name__ == '__main__':
