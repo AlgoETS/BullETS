@@ -33,7 +33,6 @@ class CustomFormatter(logging.Formatter):
 
 
 LOG_LEVEL = LogLevels.INFO
-SUPPRESS_LOGS = False
 LOGGER = logging.getLogger("BullETS")
 HANDLER = logging.StreamHandler(sys.stdout)
 FORMATTER = CustomFormatter()
@@ -68,22 +67,6 @@ def set_log_level(level: str):
     HANDLER.setLevel(LOG_LEVEL.value)
 
 
-def suppress_logs():
-    """
-    Suppress the INFO and DEBUG logs
-    """
-    global SUPPRESS_LOGS
-    SUPPRESS_LOGS = True
-
-
-def reactivate_logs():
-    """
-    Reactivate the INFO and DEBUG logs
-    """
-    global SUPPRESS_LOGS
-    SUPPRESS_LOGS = False
-
-
 def error(message: str):
     """
     Log an error message
@@ -104,21 +87,17 @@ def warning(message: str):
 
 def info(message: str):
     """
-    Log an info message, only if the logger is not currently suppressing logs
+    Log an info message
     Args:
         message: The message that will be logged
     """
-    global SUPPRESS_LOGS
-    if not SUPPRESS_LOGS:
-        LOGGER.info(message)
+    LOGGER.info(message)
 
 
 def debug(message: str):
     """
-    Log a debug message, only if the logger is not currently suppressing logs
+    Log a debug message
     Args:
         message: The message that will be logged
     """
-    global SUPPRESS_LOGS
-    if not SUPPRESS_LOGS:
-        LOGGER.debug(message)
+    LOGGER.debug(message)

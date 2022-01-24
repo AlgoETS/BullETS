@@ -30,10 +30,10 @@ class TestStrategy(unittest.TestCase):
                               end_time=END_TIME,
                               starting_balance=STARTING_BALANCE,
                               data_source=FmpDataSource(FMP_TOKEN, RESOLUTION))
-    logger.suppress_logs()
+    logger.set_log_level("WARNING")
     runner = Runner(strategy)
     runner.start()
-    logger.reactivate_logs()
+    logger.set_log_level("INFO")
 
     def test_strategy_start_balance(self):
         try:
