@@ -9,7 +9,6 @@ from datetime import datetime, date
 
 
 class ActualStrategy(Strategy):
-
     def on_start(self):
         pass
 
@@ -27,10 +26,11 @@ class TestStrategy(unittest.TestCase):
     STARTING_BALANCE = 5000
     FMP_TOKEN = os.getenv("FMP_TOKEN")
     strategy = ActualStrategy(resolution=RESOLUTION,
-                            start_time=START_TIME,
-                            end_time=END_TIME,
-                            starting_balance=STARTING_BALANCE,
-                            data_source=FmpDataSource(FMP_TOKEN, RESOLUTION))
+                              start_time=START_TIME,
+                              end_time=END_TIME,
+                              starting_balance=STARTING_BALANCE,
+                              data_source=FmpDataSource(FMP_TOKEN, RESOLUTION))
+    logger.suppress_logs()
     runner = Runner(strategy)
     runner.start()
 
