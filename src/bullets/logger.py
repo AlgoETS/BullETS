@@ -68,16 +68,36 @@ def set_log_level(level: str):
 
 
 def error(message: str):
+    """
+    Log an error message
+    Args:
+        message: The message that will be logged
+    """
     LOGGER.error(message)
 
 
 def warning(message: str):
+    """
+    Log a warning message
+    Args:
+        message: The message that will be logged
+    """
     LOGGER.warning(message)
 
 
 def info(message: str):
+    """
+    Log an info message
+    Args:
+        message: The message that will be logged
+    """
     LOGGER.info(message)
 
 
 def debug(message: str):
+    """
+    Log a debug message
+    Args:
+        message: The message that will be logged
+    """
     LOGGER.debug(message)
