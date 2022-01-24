@@ -147,7 +147,7 @@ class FmpDataSource(DataSourceInterface):
         Gets all the forex currency pairs available in FMP
         Returns: A list (symbol, name, currency, stockExchange, exchangeShortName) of all available currency pairs
         """
-        url = self.URL_BASE_FMP + "available-forex-currency-pairs?apikey=" + self.token
+        url = self.URL_BASE_FMP + "symbol/available-forex-currency-pairs?apikey=" + self.token
         response = self.request(url)
         return json.loads(response)
 
