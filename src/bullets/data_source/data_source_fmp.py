@@ -16,9 +16,9 @@ class FmpDataSource(DataSourceInterface):
 
     def get_price(self, symbol: str, timestamp: datetime = None, value: str = None) -> int:
         """
-        Gets the price of the stock at the current timestamp
+        Gets the price of the stock/forex at the current timestamp
         Args:
-            symbol: Symbol of the stock
+            symbol: Symbol of the stock/forex
             timestamp: Time of the data you want. If you want the current time of the backtest, leave empty
             value: Value of the stock you want (open, close, low, high, etc)
         Returns: The stock price at the given timestamp
@@ -139,6 +139,15 @@ class FmpDataSource(DataSourceInterface):
         Returns: A list (symbol, name, price, exchange, exchangeShortName) of all tradable symbols
         """
         url = self.URL_BASE_FMP + "available-traded/list?apikey=" + self.token
+        response = self.request(url)
+        return json.loads(response)
+
+    def get_forex_currency_pairs_list(self) -> list:
+        """
+        Gets all the forex currency pairs available in FMP
+        Returns: A list (symbol, name, currency, stockExchange, exchangeShortName) of all available currency pairs
+        """
+        url = self.URL_BASE_FMP + "symbol/available-forex-currency-pairs?apikey=" + self.token
         response = self.request(url)
         return json.loads(response)
 
