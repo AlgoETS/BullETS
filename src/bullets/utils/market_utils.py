@@ -22,7 +22,7 @@ def is_market_open(date: datetime, resolution: Resolution = Resolution.DAILY) ->
         elif date.hour == 9 and date.minute < 30:
             return False
 
-        return date not in us_holiday_list(date.year)
+    return date not in us_holiday_list(date.year)
 
 
 def get_date_in_x_market_days_away(lapse: int) -> date:
