@@ -10,16 +10,16 @@ def is_market_open(date: datetime, resolution: Resolution=Resolution.DAILY) -> b
         optional: resolution: Will check if market is open at a specific time if the resolution demands it
     Returns: True if the market is open, else False
     """
-        if date.weekday() >= 5:
-            return False
+    if date.weekday() >= 5:
+        return False
 
-        if resolution != Resolution.DAILY:
-            if date.hour < 9 or date.hour > 16:
-                return False
-            elif date.hour == 16 and date.minute > 0:
-                return False
-            elif date.hour == 9 and date.minute < 30:
-                return False
+    if resolution != Resolution.DAILY:
+        if date.hour < 9 or date.hour > 16:
+            return False
+        elif date.hour == 16 and date.minute > 0:
+            return False
+        elif date.hour == 9 and date.minute < 30:
+            return False
 
         return date not in us_holiday_list(date.year)
 
