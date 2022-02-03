@@ -5,12 +5,16 @@ from bullets.data_source.data_source_interface import Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
 from bullets.utils.holiday_date_util import us_holiday_list
-
+import os
+import os.path as osp
+import json
 
 class Runner:
-    def __init__(self, strategy: Strategy):
+    def __init__(self, strategy: Strategy, logdir: str = None):
         self.strategy = strategy
+        self.logdir = logdir
         self.holidays = None
+        self.stats = {}
 
     def start(self):
         """
@@ -70,6 +74,8 @@ class Runner:
         logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
         if isinstance(self.strategy.data_source, FmpDataSource):
             logger.info("Remaining FMP Calls :  " + str(self.strategy.data_source.get_remaining_calls()))
+        if not self.logdir is None:
+            self._save_final_stats()
 
     def _update_final_timestamp(self):
         final_timestamp = self.strategy.start_time
@@ -77,3 +83,20 @@ class Runner:
             if transaction.status != Status.FAILED_SYMBOL_NOT_FOUND and transaction.timestamp > final_timestamp:
                 final_timestamp = transaction.timestamp
         self.strategy.update_time(final_timestamp)
+
+    def _save_final_stats(self):
+        self.stats['profit'] = self.strategy.portfolio.cash_balance - self.strategy.starting_balance
+        self.stats['final_balance'] = self.strategy.portfolio.cash_balance
+
+        LOG_REPO = "../log" #TODO : put in env file
+        print(os.getcwd())
+        try:
+            os.mkdir(osp.join(LOG_REPO, self.logdir))
+        except OSError as error:
+            print(error)
+
+        #TODO : add a temporary csv format save so the report can be handled with excel as well
+        with open(osp.join(LOG_REPO,self.logdir,'strategy_report.json'), 'w') as fp:
+            json.dump(self.stats, fp, indent=4)
+        print("Log file successfully saved under {}".format(osp.join(LOG_REPO, self.logdir)))
+        return 0
