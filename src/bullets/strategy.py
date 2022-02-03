@@ -7,12 +7,14 @@ from bullets import logger
 
 class Strategy:
     def __init__(self, resolution: Resolution, start_time: datetime, end_time: datetime, starting_balance: float,
-                 data_source: DataSourceInterface, slippage_percent: int = 25, transaction_fees: int = 1):
+                 data_source: DataSourceInterface, output_folder: str, slippage_percent: int = 25,
+                 transaction_fees: int = 1):
         self.resolution = resolution
         self.start_time = start_time
         self.end_time = end_time
         self.starting_balance = starting_balance
         self.data_source = data_source
+        self.output_folder = output_folder
         self.slippage_percent = slippage_percent
         self.transaction_fees = transaction_fees
         self.timestamp = None
@@ -73,3 +75,6 @@ class Strategy:
 
         if self.transaction_fees is None or self.transaction_fees < 0:
             raise ValueError("Transaction fees should be positive or 0")
+
+        if self.output_folder is None or self.output_folder == "":
+            raise ValueError("Invalid strategy output folder")

@@ -1,3 +1,5 @@
+import csv
+import os
 from datetime import datetime, timedelta
 from bullets.portfolio.transaction import Status
 from bullets.strategy import Strategy
@@ -31,7 +33,10 @@ class Runner:
             self.strategy.on_resolution()
             self.strategy.portfolio.on_resolution()
         self.strategy.on_finish()
-        self._post_backtest_log()
+        logger.info("=========== Backtest complete ===========")
+        self._save_backtest_log()
+        if not self.logdir is None:
+            self._save_final_stats()
 
     def _get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         moments = []
@@ -65,17 +70,33 @@ class Runner:
 
         return date not in us_holiday_list(date.year)
 
-    def _post_backtest_log(self):
-        self._update_final_timestamp()
-        logger.info("=========== Backtest complete ===========")
-        logger.info("Initial Cash : " + str(self.strategy.starting_balance))
-        logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
-        logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
-        logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
-        if isinstance(self.strategy.data_source, FmpDataSource):
-            logger.info("Remaining FMP Calls :  " + str(self.strategy.data_source.get_remaining_calls()))
-        if not self.logdir is None:
-            self._save_final_stats()
+    def _save_backtest_log(self):
+        new_dir = self.strategy.output_folder + datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        os.mkdir(new_dir)
+        self._save_transactions_to_csv(new_dir + "/Transactions.csv")
+        self._save_stats_to_csv(new_dir + "/Stats.csv")
+
+    def _save_transactions_to_csv(self, file: str):
+        with open(file, 'w', newline='', encoding='utf-8') as outputFile:
+            writer = csv.writer(outputFile, delimiter=';')
+            headers = ['Status', 'Order Type', 'Time', 'Symbol', 'Share Count', 'Simulated Price', 'Total Price',
+                       'Cash Balance']
+            writer.writerow(headers)
+            for tr in self.strategy.portfolio.transactions:
+                writer.writerow([tr.status.value, tr.order_type, tr.timestamp, tr.symbol, tr.nb_shares,
+                                 tr.simulated_price, tr.total_price, tr.cash_balance])
+        logger.info("Transactions sheet saved to : " + file)
+
+    def _save_stats_to_csv(self, file: str):
+        with open(file, 'w', newline='', encoding='utf-8') as outputFile:
+            writer = csv.writer(outputFile, delimiter=';')
+            writer.writerow(["Initial Cash", self.strategy.starting_balance])
+            writer.writerow(["Final Balance", self.strategy.portfolio.update_and_get_balance()])
+            writer.writerow(["Final Cash", self.strategy.portfolio.cash_balance])
+            writer.writerow(["Profit", str(self.strategy.portfolio.get_percentage_profit()) + "%"])
+            if isinstance(self.strategy.data_source, FmpDataSource):
+                writer.writerow(["Remaining FMP Calls", self.strategy.data_source.get_remaining_calls()])
+        logger.info("Stats sheet saved to : " + file)
 
     def _update_final_timestamp(self):
         final_timestamp = self.strategy.start_time
