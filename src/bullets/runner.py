@@ -1,5 +1,4 @@
 import csv
-import os
 from datetime import datetime, timedelta
 from bullets.portfolio.transaction import Status
 from bullets.strategy import Strategy
@@ -11,12 +10,11 @@ import os
 import os.path as osp
 import json
 
+
 class Runner:
-    def __init__(self, strategy: Strategy, logdir: str = None):
+    def __init__(self, strategy: Strategy):
         self.strategy = strategy
-        self.logdir = logdir
         self.holidays = None
-        self.stats = {}
 
     def start(self):
         """
@@ -35,8 +33,7 @@ class Runner:
         self.strategy.on_finish()
         logger.info("=========== Backtest complete ===========")
         self._save_backtest_log()
-        if not self.logdir is None:
-            self._save_final_stats()
+        self._open_viewer_app()
 
     def _get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         moments = []
@@ -105,19 +102,8 @@ class Runner:
                 final_timestamp = transaction.timestamp
         self.strategy.update_time(final_timestamp)
 
-    def _save_final_stats(self):
-        self.stats['profit'] = self.strategy.portfolio.cash_balance - self.strategy.starting_balance
-        self.stats['final_balance'] = self.strategy.portfolio.cash_balance
-
-        LOG_REPO = "../log" #TODO : put in env file
-        print(os.getcwd())
-        try:
-            os.mkdir(osp.join(LOG_REPO, self.logdir))
-        except OSError as error:
-            print(error)
-
-        #TODO : add a temporary csv format save so the report can be handled with excel as well
-        with open(osp.join(LOG_REPO,self.logdir,'strategy_report.json'), 'w') as fp:
-            json.dump(self.stats, fp, indent=4)
-        print("Log file successfully saved under {}".format(osp.join(LOG_REPO, self.logdir)))
-        return 0
+    def _open_viewer_app(self):
+        # TODO : Open the viewer app and make it visualise the data stored in the files
+        #        (see _save_stats_to_csv & _save_transactions_to_cvs)
+        #
+        output_folder = self.strategy.output_folder
