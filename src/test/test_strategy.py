@@ -28,7 +28,7 @@ class TestPortfolio(unittest.TestCase):
         self.assertEqual(5458.0374725, strategy.portfolio.update_and_get_balance())
         self.assertEqual(89.12497250000004, strategy.portfolio.cash_balance)
         self.assertEqual(9.16, strategy.portfolio.get_percentage_profit())
-        self.assertEqual(34, len(strategy.portfolio.transactions))
+        self.assertEqual(33, len(strategy.portfolio.transactions))
 
     def test_strategy_none_date(self):
         self.assertRaisesRegex(TypeError, "Invalid strategy date type", TestStrategy,
@@ -72,11 +72,23 @@ class TestPortfolio(unittest.TestCase):
         datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
         self.assertEqual(55256000000, datasource.get_cash_flow_statement("AAPL", date(2019, 9, 28)).net_income)
 
+    def test_symbol_list(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_symbol_list()))
+
+    def test_income_statement_list(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(True, 'AAPL' in datasource.get_income_statement_list())
+
+    def test_tradable_symbol_list(self):
+        datasource = FmpDataSource(self.FMP_TOKEN, self.RESOLUTION)
+        self.assertEqual(True, any(item['symbol'] == 'AAPL' for item in datasource.get_tradable_symbol_list()))
+
 
 class TestStrategy(Strategy):
 
     def on_start(self):
-        symbols = self.data_source.get_symbol_list()
+        pass
 
     def on_resolution(self):
         self.portfolio.market_order("AAPL", 5)

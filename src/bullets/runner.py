@@ -6,12 +6,17 @@ from bullets.strategy import Strategy
 from bullets.data_source.data_source_interface import Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
-
+from bullets.utils.holiday_date_util import us_holiday_list
+import os
+import os.path as osp
+import json
 
 class Runner:
-    def __init__(self, strategy: Strategy):
+    def __init__(self, strategy: Strategy, logdir: str = None):
         self.strategy = strategy
+        self.logdir = logdir
         self.holidays = None
+        self.stats = {}
 
     def start(self):
         """
@@ -30,6 +35,8 @@ class Runner:
         self.strategy.on_finish()
         logger.info("=========== Backtest complete ===========")
         self._save_backtest_log()
+        if not self.logdir is None:
+            self._save_final_stats()
 
     def _get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
         moments = []
@@ -49,19 +56,19 @@ class Runner:
         return moments
 
     @staticmethod
-    def _is_market_open(time: datetime, resolution: Resolution) -> bool:
-        if time.weekday() >= 5:
+    def _is_market_open(date: datetime, resolution: Resolution) -> bool:
+        if date.weekday() >= 5:
             return False
 
         if resolution != Resolution.DAILY:
-            if time.hour < 9 or time.hour > 16:
+            if date.hour < 9 or date.hour > 16:
                 return False
-            elif time.hour == 16 and time.minute > 0:
+            elif date.hour == 16 and date.minute > 0:
                 return False
-            elif time.hour == 9 and time.minute < 30:
+            elif date.hour == 9 and date.minute < 30:
                 return False
 
-        return True
+        return date not in us_holiday_list(date.year)
 
     def _save_backtest_log(self):
         new_dir = self.strategy.output_folder + datetime.now().strftime("%Y-%m-%d %H-%M-%S")
@@ -97,3 +104,20 @@ class Runner:
             if transaction.status != Status.FAILED_SYMBOL_NOT_FOUND and transaction.timestamp > final_timestamp:
                 final_timestamp = transaction.timestamp
         self.strategy.update_time(final_timestamp)
+
+    def _save_final_stats(self):
+        self.stats['profit'] = self.strategy.portfolio.cash_balance - self.strategy.starting_balance
+        self.stats['final_balance'] = self.strategy.portfolio.cash_balance
+
+        LOG_REPO = "../log" #TODO : put in env file
+        print(os.getcwd())
+        try:
+            os.mkdir(osp.join(LOG_REPO, self.logdir))
+        except OSError as error:
+            print(error)
+
+        #TODO : add a temporary csv format save so the report can be handled with excel as well
+        with open(osp.join(LOG_REPO,self.logdir,'strategy_report.json'), 'w') as fp:
+            json.dump(self.stats, fp, indent=4)
+        print("Log file successfully saved under {}".format(osp.join(LOG_REPO, self.logdir)))
+        return 0
