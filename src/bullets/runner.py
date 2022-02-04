@@ -1,4 +1,5 @@
 import csv
+import sys
 from datetime import datetime, timedelta
 from bullets.portfolio.transaction import Status
 from bullets.strategy import Strategy
@@ -7,8 +8,8 @@ from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
 from bullets.utils.holiday_date_util import us_holiday_list
 import os
-import os.path as osp
-import json
+
+from streamlit import cli as stcli
 
 
 class Runner:
@@ -70,19 +71,8 @@ class Runner:
     def _save_backtest_log(self):
         new_dir = self.strategy.output_folder + datetime.now().strftime("%Y-%m-%d %H-%M-%S")
         os.mkdir(new_dir)
-        self._save_transactions_to_csv(new_dir + "/Transactions.csv")
         self._save_stats_to_csv(new_dir + "/Stats.csv")
-
-    def _save_transactions_to_csv(self, file: str):
-        with open(file, 'w', newline='', encoding='utf-8') as outputFile:
-            writer = csv.writer(outputFile, delimiter=';')
-            headers = ['Status', 'Order Type', 'Time', 'Symbol', 'Share Count', 'Simulated Price', 'Total Price',
-                       'Cash Balance']
-            writer.writerow(headers)
-            for tr in self.strategy.portfolio.transactions:
-                writer.writerow([tr.status.value, tr.order_type, tr.timestamp, tr.symbol, tr.nb_shares,
-                                 tr.simulated_price, tr.total_price, tr.cash_balance])
-        logger.info("Transactions sheet saved to : " + file)
+        self._save_transactions_to_csv(new_dir + "/Transactions.csv")
 
     def _save_stats_to_csv(self, file: str):
         with open(file, 'w', newline='', encoding='utf-8') as outputFile:
@@ -95,6 +85,17 @@ class Runner:
                 writer.writerow(["Remaining FMP Calls", self.strategy.data_source.get_remaining_calls()])
         logger.info("Stats sheet saved to : " + file)
 
+    def _save_transactions_to_csv(self, file: str):
+        with open(file, 'w', newline='', encoding='utf-8') as outputFile:
+            writer = csv.writer(outputFile, delimiter=';')
+            headers = ['Status', 'Order Type', 'Time', 'Symbol', 'Share Count', 'Simulated Price', 'Total Price',
+                       'Cash Balance']
+            writer.writerow(headers)
+            for tr in self.strategy.portfolio.transactions:
+                writer.writerow([tr.status.value, tr.order_type, tr.timestamp, tr.symbol, tr.nb_shares,
+                                 tr.simulated_price, tr.total_price, tr.cash_balance])
+        logger.info("Transactions sheet saved to : " + file)
+
     def _update_final_timestamp(self):
         final_timestamp = self.strategy.start_time
         for transaction in self.strategy.portfolio.transactions:
@@ -106,4 +107,5 @@ class Runner:
         # TODO : Open the viewer app and make it visualise the data stored in the files
         #        (see _save_stats_to_csv & _save_transactions_to_cvs)
         #
-        output_folder = self.strategy.output_folder
+        sys.argv = ["streamlit", "run", "..\\bullets\\viewer\\viewer_app.py"]
+        stcli.main()
