@@ -7,8 +7,8 @@ from bullets import logger
 
 class Strategy:
     def __init__(self, resolution: Resolution, start_time: datetime, end_time: datetime, starting_balance: float,
-                 data_source: DataSourceInterface, output_folder: str, slippage_percent: int = 25,
-                 transaction_fees: int = 1):
+                 data_source: DataSourceInterface, output_folder: str = None, slippage_percent: int = 25,
+                 transaction_fees: int = 1,save_csv: bool = True):
         self.resolution = resolution
         self.start_time = start_time
         self.end_time = end_time
@@ -20,6 +20,7 @@ class Strategy:
         self.timestamp = None
         self.portfolio = Portfolio(self.starting_balance, self.data_source, self.slippage_percent,
                                    self.transaction_fees)
+        self.save_csv = save_csv
         self._validate_start_data()
 
     @abstractmethod

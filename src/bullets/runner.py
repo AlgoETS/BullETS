@@ -15,6 +15,7 @@ class Runner:
     def __init__(self, strategy: Strategy):
         self.strategy = strategy
         self.holidays = None
+        self.strategy.output_folder = self.strategy.output_folder + datetime.now().strftime("%Y-%m-%d %H-%M-%S")
 
     def start(self):
         """
@@ -68,10 +69,14 @@ class Runner:
         return date not in us_holiday_list(date.year)
 
     def _save_backtest_log(self):
-        new_dir = self.strategy.output_folder + datetime.now().strftime("%Y-%m-%d %H-%M-%S")
-        os.mkdir(new_dir)
-        self._save_transactions_to_csv(new_dir + "/Transactions.csv")
-        self._save_stats_to_csv(new_dir + "/Stats.csv")
+        try:
+            os.mkdir(self.strategy.output_folder)
+        except OSError as error:
+            print(error)
+        self._save_stats_to_json()
+        if self.strategy.save_csv:
+            self._save_transactions_to_csv(self.strategy.output_folder + "/Transactions.csv")
+            self._save_stats_to_csv(self.strategy.output_folder + "/Stats.csv")
 
     def _save_transactions_to_csv(self, file: str):
         with open(file, 'w', newline='', encoding='utf-8') as outputFile:
@@ -83,6 +88,16 @@ class Runner:
                 writer.writerow([tr.status.value, tr.order_type, tr.timestamp, tr.symbol, tr.nb_shares,
                                  tr.simulated_price, tr.total_price, tr.cash_balance])
         logger.info("Transactions sheet saved to : " + file)
+
+    def _save_stats_to_json(self):
+        stats = {}
+        stats['profit'] = self.strategy.portfolio.get_percentage_profit()
+        stats['starting_balance'] = self.strategy.starting_balance
+        stats['final_balance'] = self.strategy.portfolio.update_and_get_balance()
+        stats['final_cash'] = self.strategy.portfolio.cash_balance
+
+        with open(osp.join(self.strategy.output_folder, 'strategy_report.json'), 'w', encoding='utf-8') as f:
+            json.dump(stats, f, ensure_ascii=False, indent=4)
 
     def _save_stats_to_csv(self, file: str):
         with open(file, 'w', newline='', encoding='utf-8') as outputFile:
