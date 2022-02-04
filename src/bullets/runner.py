@@ -1,4 +1,5 @@
 import csv
+import sys
 from datetime import datetime, timedelta
 from bullets.portfolio.transaction import Status
 from bullets.strategy import Strategy
@@ -9,6 +10,8 @@ from bullets.utils.holiday_date_util import us_holiday_list
 import os
 import os.path as osp
 import json
+
+from streamlit import cli as stcli
 
 
 class Runner:
@@ -121,4 +124,5 @@ class Runner:
         # TODO : Open the viewer app and make it visualise the data stored in the files
         #        (see _save_stats_to_csv & _save_transactions_to_cvs)
         #
-        output_folder = self.strategy.output_folder
+        sys.argv = ["streamlit", "run", "..\\bullets\\viewer\\viewer_app.py"]
+        stcli.main()
