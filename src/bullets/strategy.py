@@ -19,6 +19,7 @@ class Strategy:
         self.portfolio = Portfolio(self.starting_balance, self.data_source, self.slippage_percent,
                                    self.transaction_fees)
         self._validate_start_data()
+        self._strategy_statistics = {}
 
     @abstractmethod
     def on_resolution(self):
@@ -73,3 +74,11 @@ class Strategy:
 
         if self.transaction_fees is None or self.transaction_fees < 0:
             raise ValueError("Transaction fees should be positive or 0")
+
+    def record_scalar(self, scalar, name):
+        if name in self._strategy_statistics.keys():
+            self._strategy_statistics[name].append(scalar)
+        else :
+            self._strategy_statistics[name] = [scalar]
+
+    #TODO: modify existing value (count), add timestamp for timeseries

@@ -87,16 +87,21 @@ class Runner:
     def _save_final_stats(self):
         self.stats['profit'] = self.strategy.portfolio.cash_balance - self.strategy.starting_balance
         self.stats['final_balance'] = self.strategy.portfolio.cash_balance
+        self.stats['starting_balance'] = self.strategy.starting_balance
+        self.stats['user_statistics'] = self.strategy._strategy_statistics
 
         LOG_REPO = "../log" #TODO : put in env file
         print(os.getcwd())
         try:
-            os.mkdir(osp.join(LOG_REPO, self.logdir))
+            original_umask = os.umask(0)
+            os.makedirs(osp.join(LOG_REPO, self.logdir), mode=0o777)
         except OSError as error:
             print(error)
+        finally:
+            os.umask(original_umask)
 
         #TODO : add a temporary csv format save so the report can be handled with excel as well
-        with open(osp.join(LOG_REPO,self.logdir,'strategy_report.json'), 'w') as fp:
-            json.dump(self.stats, fp, indent=4)
+        with open(osp.join(LOG_REPO,self.logdir,'strategy_report.json'), 'w', encoding='utf-8') as fp:
+            json.dump(self.stats, fp, indent=4,ensure_ascii=False,)
         print("Log file successfully saved under {}".format(osp.join(LOG_REPO, self.logdir)))
         return 0
