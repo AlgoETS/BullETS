@@ -25,7 +25,7 @@ class TestMarket(unittest.TestCase):
 
     def test_valid_weekday_sub_daily_market_open(self):
         try:
-            date = datetime(2019, 1, 16, 1, 30, 20)
+            date = datetime(2022, 2, 2, 13, 30, 20)
             self.assertEqual(True, is_market_open(date, Resolution.MINUTE))
             logger.info("Valid weekday sub daily market open test successful")
         finally:
@@ -33,8 +33,8 @@ class TestMarket(unittest.TestCase):
 
     def test_invalid_weekend_daily_market_open(self):
         try:
-            date = datetime(202, 2, 5, 1, 30, 20)
-            self.assertEqual(False, is_market_open(date, Resolution.DAILY))
+            date = datetime(2022, 2, 3, 1, 30, 20)
+            self.assertEqual(True, is_market_open(date, Resolution.DAILY))
             logger.info("Invalid weekend daily market open test successful")
         finally:
             pass
@@ -49,30 +49,30 @@ class TestMarket(unittest.TestCase):
 
     def test_days_away_same_week(self):
         try:
-            startdate = datetime(2022, 1, 10)
-            enddate = datetime(2022,1,14)
+            startdate = datetime(2022,2,7)
+            enddate = datetime(2022,2,11)
             daysaway = 4
-            self.assertEqual(get_date_in_x_market_days_away(daysaway,startdate),enddate)
+            self.assertEqual(True,get_date_in_x_market_days_away(daysaway,startdate)==enddate)
             logger.info("Return date 4 days away same week test successful")
         finally:
             pass
 
     def test_days_away_over_weekend(self):
         try:
-            startdate = datetime(2022,1,10)
-            enddate = datetime(2022,1,18)
+            startdate = datetime(2022,2,7)
+            enddate = datetime(2022,2,14)
             daysaway = 5
-            self.assertEqual(get_date_in_x_market_days_away(daysaway,startdate),enddate)
+            self.assertEqual(True,get_date_in_x_market_days_away(daysaway,startdate)==enddate)
             logger.info("Return date 5 days away over the weekend test successful")
         finally:
             pass
 
-    def test_days_away_over_weekend(self):
+    def test_days_away_over_holiday(self):
         try:
-            startdate = datetime(2022,8,7)
-            enddate = datetime(2022,8,12)
-            daysaway = 2
-            self.assertEqual(get_date_in_x_market_days_away(daysaway,startdate),enddate)
+            startdate = datetime(2022,2,18)
+            enddate = datetime(2022,2,22)
+            daysaway = 1
+            self.assertEqual(True,get_date_in_x_market_days_away(daysaway,startdate)==enddate)
             logger.info("Return date 2 days away over holiday test successful")
         finally:
             pass

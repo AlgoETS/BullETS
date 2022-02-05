@@ -30,6 +30,7 @@ def get_date_in_x_market_days_away(lapse: int, startdate: datetime = datetime.to
     Gets the date that is x amount of market day(s) away
     Args:
         lapse: Number of days wanted
+        startdate: date at which the function starts, default: present day
     Returns: The date that is the amount of market days away in date format
     """
     countdown = lapse
@@ -39,3 +40,6 @@ def get_date_in_x_market_days_away(lapse: int, startdate: datetime = datetime.to
         if is_market_open(today):
             countdown -= 1
     return today
+
+date = datetime(2022, 2, 2, 13, 30, 20)
+print(is_market_open(date, Resolution.MINUTE))
