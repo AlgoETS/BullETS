@@ -66,6 +66,7 @@ class Runner:
         logger.info("Initial Cash : " + str(self.strategy.starting_balance))
         logger.info("Final Balance : " + str(self.strategy.portfolio.update_and_get_balance()))
         logger.info("Final Cash : " + str(self.strategy.portfolio.cash_balance))
+        logger.info("Total fees paid : " + str(self.strategy.portfolio.get_total_fees_paid()))
         logger.info("Profit : " + str(self.strategy.portfolio.get_percentage_profit()) + "%")
         if isinstance(self.strategy.data_source, FmpDataSource):
             logger.info("Remaining FMP Calls :  " + str(self.strategy.data_source.get_remaining_calls()))

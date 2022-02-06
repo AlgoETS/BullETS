@@ -63,12 +63,10 @@ class TestPortfolio(unittest.TestCase):
         portfolio.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.buy_stop_order("AAPL", 5, 131)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(1000, portfolio.update_and_get_balance())
         data_source.timestamp = datetime.datetime(2021, 6, 14, 15, 57)
         portfolio.timestamp = datetime.datetime(2021, 6, 14, 15, 57)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(999.0, portfolio.update_and_get_balance())
 
     def test_sell_stop_order(self):
@@ -78,12 +76,10 @@ class TestPortfolio(unittest.TestCase):
         portfolio.timestamp = datetime.datetime(2021, 6, 14, 15, 57)
         portfolio.sell_stop_order("AAPL", 5, 131)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(1000, portfolio.update_and_get_balance())
         data_source.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(999.0000000000001, portfolio.update_and_get_balance())
 
     def test_buy_limit_order(self):
@@ -93,12 +89,10 @@ class TestPortfolio(unittest.TestCase):
         portfolio.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.buy_limit_order("AAPL", 5, 131)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(1000, portfolio.update_and_get_balance())
         data_source.timestamp = datetime.datetime(2021, 6, 14, 15, 57)
         portfolio.timestamp = datetime.datetime(2021, 6, 14, 15, 57)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(999.0, portfolio.update_and_get_balance())
 
     def test_sell_limit_order(self):
@@ -108,13 +102,44 @@ class TestPortfolio(unittest.TestCase):
         portfolio.timestamp = datetime.datetime(2021, 6, 14, 15, 57)
         portfolio.sell_limit_order("AAPL", 5, 131)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(1000, portfolio.update_and_get_balance())
         data_source.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.timestamp = datetime.datetime(2021, 4, 14, 15, 57)
         portfolio.on_resolution()
-        price = data_source.get_price('AAPL')
         self.assertEqual(999.0000000000001, portfolio.update_and_get_balance())
+
+    def test_get_total_fees_paid(self):
+        date = datetime.datetime(2021, 6, 14, 15, 57)
+        data_source = FmpDataSource(os.getenv("FMP_TOKEN"), Resolution.MINUTE)
+        price = data_source.get_price('AAPL', date)
+        expected_fees_paid = 15
+        # Allocating just enough money to buy 10 shares of Apple
+        balance = (price * 10) + expected_fees_paid
+        portfolio = Portfolio(balance, data_source, 25, 1.5)
+        data_source.timestamp = date
+        portfolio.timestamp = date
+
+        for _ in range(10):
+            portfolio.market_order("AAPL", 1)
+
+        self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
+
+        # Failed orders have no incidence on the total amount of fees
+        portfolio.market_order("AAPL", 1)
+        self.assertEqual(Status.FAILED_INSUFFICIENT_FUNDS, portfolio.transactions[-1].status)
+        self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
+
+        portfolio.market_order("STONKS", 1)
+        self.assertEqual(Status.FAILED_SYMBOL_NOT_FOUND, portfolio.transactions[-1].status)
+        self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
+
+        # Each transaction can have a different amount of fees
+        portfolio.transaction_fees = 5
+        portfolio.cash_balance += price + 5
+        portfolio.market_order("AAPL", 1)
+
+        self.assertEqual(expected_fees_paid + 5, portfolio.get_total_fees_paid())
+
 
 if __name__ == '__main__':
     unittest.main()
