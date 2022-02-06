@@ -25,16 +25,16 @@ def is_market_open(date: datetime, resolution: Resolution = Resolution.DAILY) ->
     return date not in us_holiday_list(date.year)
 
 
-def get_date_in_x_market_days_away(lapse: int, startdate: datetime = datetime.today()) -> date:
+def get_date_in_x_market_days_away(lapse: int, start_date: datetime = datetime.today()) -> date:
     """
     Gets the date that is x amount of market day(s) away
     Args:
         lapse: Number of days wanted
-        startdate: date at which the function starts, default: present day
+        start_date: date at which the function starts, default: present day
     Returns: The date that is the amount of market days away in date format
     """
     countdown = lapse
-    today = startdate
+    today = start_date
     while countdown > 0:
         today = today + timedelta(days=+1)
         if is_market_open(today):
