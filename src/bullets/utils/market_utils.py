@@ -40,6 +40,3 @@ def get_date_in_x_market_days_away(lapse: int, startdate: datetime = datetime.to
         if is_market_open(today):
             countdown -= 1
     return today
-
-date = datetime(2022, 2, 2, 13, 30, 20)
-print(is_market_open(date, Resolution.MINUTE))
