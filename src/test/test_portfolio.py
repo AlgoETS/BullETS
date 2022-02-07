@@ -108,13 +108,13 @@ class TestPortfolio(unittest.TestCase):
         portfolio.on_resolution()
         self.assertEqual(999.0000000000001, portfolio.update_and_get_balance())
 
-    def test_get_total_fees_paid(self):
+    @mock.patch('bullets.data_source.data_source_interface.DataSourceInterface.get_price', return_value=130.33)
+    def test_get_total_fees_paid(self, mock_get_price):
         date = datetime.datetime(2021, 6, 14, 15, 57)
         data_source = FmpDataSource(os.getenv("FMP_TOKEN"), Resolution.MINUTE)
-        price = data_source.get_price('AAPL', date)
         expected_fees_paid = 15
         # Allocating just enough money to buy 10 shares of Apple
-        balance = (price * 10) + expected_fees_paid
+        balance = (mock_get_price() * 10) + expected_fees_paid
         portfolio = Portfolio(balance, data_source, 25, 1.5)
         data_source.timestamp = date
         portfolio.timestamp = date
@@ -135,7 +135,7 @@ class TestPortfolio(unittest.TestCase):
 
         # Each transaction can have a different amount of fees
         portfolio.transaction_fees = 5
-        portfolio.cash_balance += price + 5
+        portfolio.cash_balance += mock_get_price() + 5
         portfolio.market_order("AAPL", 1)
 
         self.assertEqual(expected_fees_paid + 5, portfolio.get_total_fees_paid())
