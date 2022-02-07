@@ -14,7 +14,7 @@ class Order:
 
 class Portfolio:
     def __init__(self, start_balance: float, data_source: DataSourceInterface, slippage_percent: int,
-                 transaction_fees: int):
+                 transaction_fees: float):
         self.start_balance = start_balance
         self.cash_balance = start_balance
         self.holdings = {}
@@ -122,6 +122,13 @@ class Portfolio:
         Returns: Profit percentage
         """
         return round(self.update_and_get_balance() / self.start_balance * 100 - 100, 2)
+
+    def get_total_fees_paid(self) -> float:
+        """
+        Get the total amount paid in transaction fees
+        Returns: Total amount paid in transaction fees
+        """
+        return sum(t.transaction_fees for t in self.transactions if t.status == Status.SUCCESSFUL)
 
     def _order(self, symbol: str, nb_shares: float, order_type: str):
         """
