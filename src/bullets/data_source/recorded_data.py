@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from bullets.data_source.data_source_interface import Resolution
 
 
@@ -9,6 +11,8 @@ class Stock:
         self.income_statements = {}
         self.balance_sheet_statements = {}
         self.cash_flow_statements = {}
+        self.start_date = None
+        self.end_date = None
 
 
 class PricePoint:

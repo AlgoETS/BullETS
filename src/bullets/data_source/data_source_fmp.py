@@ -14,6 +14,37 @@ class FmpDataSource(DataSourceInterface):
         self.resolution = resolution
         self.stocks = {}
 
+    def get_historical_daily_prices(self, symbol: str, start_date: date, end_date: date = None):
+        """
+        Gets the historical prices of the given stock for the given interval period
+        Args:
+            symbol: Symbol of the stock/forex
+            start_date: Starting time of the interval of historical prices
+            end_date: Ending time of the interval of historical price. Default value is the time of the backtest
+        Returns: An array of the closing price of the stock for every day between the interval
+        """
+        if end_date is None:
+            end_date = self.timestamp.date()
+
+        if symbol not in self.stocks:
+            self._store_price_points(symbol, start_date, end_date)
+        else:
+            stock = self.stocks[symbol]
+
+            # This makes sure we're not querying price points we already have.
+            if stock.start_date is not None and stock.start_date > start_date:
+                uncached_start_date = start_date
+                uncached_end_date = stock.start_date
+                self._store_price_points(symbol, uncached_start_date, uncached_end_date)
+
+            if stock.end_date is not None and stock.end_date < end_date:
+                uncached_end_date = end_date
+                uncached_start_date = stock.end_date
+                self._store_price_points(symbol, uncached_start_date, uncached_end_date)
+
+        return [p for p in self.stocks[symbol].price_points.values()
+                if start_date <= datetime.strptime(p.date, "%Y-%m-%d").date() <= end_date]
+
     def get_price(self, symbol: str, timestamp: datetime = None, value: str = None) -> int:
         """
         Gets the price of the stock/forex at the current timestamp
@@ -214,6 +245,12 @@ class FmpDataSource(DataSourceInterface):
             interval = "from=" + str(start_date) + "&to=" + str(current_end_date)
             url = self.URL_BASE_FMP + url_resolution + symbol + "?" + interval + "&apikey=" + self.token
             response = self.request(url)
+
+            if stock.start_date is None or stock.start_date > start_date:
+                stock.start_date = start_date
+
+            if stock.end_date is None or stock.end_date < current_end_date:
+                stock.end_date = current_end_date
 
             if response == "{ }":
                 break
