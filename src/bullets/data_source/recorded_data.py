@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from bullets.data_source.data_source_interface import Resolution
 
 
