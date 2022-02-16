@@ -28,6 +28,16 @@ class DataSourceInterface:
         """
         pass
 
+    @abstractmethod
+    def get_historical_daily_prices(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None):
+        """
+          Gets the historical prices of the given stock for the given interval period
+          Args:
+              symbol: Symbol of the stock/forex
+              start_date: Starting time of the interval of historical prices
+              end_date: Ending time of the interval of historical price. Default value is the time of the backtest
+          Returns: An array of the closing price of the stock for every day between the interval
+        """
     @staticmethod
     def request(url: str, method: str = "GET", body=None) -> str:
         """
