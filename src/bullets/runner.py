@@ -98,6 +98,7 @@ class Runner:
         stats['starting_balance'] = self.strategy.starting_balance
         stats['final_balance'] = self.strategy.portfolio.update_and_get_balance()
         stats['final_cash'] = self.strategy.portfolio.cash_balance
+        stats['transactions'] = [ transaction.to_dict() for transaction in self.strategy.portfolio.transactions]
 
         with open(osp.join(self.strategy.output_folder, 'strategy_report.json'), 'w', encoding='utf-8') as f:
             json.dump(stats, f, ensure_ascii=False, indent=4)
@@ -121,8 +122,7 @@ class Runner:
         self.strategy.update_time(final_timestamp)
 
     def _open_viewer_app(self):
-        # TODO : Open the viewer app and make it visualise the data stored in the files
-        #        (see _save_stats_to_csv & _save_transactions_to_cvs)
-        #
-        sys.argv = ["streamlit", "run", "..\\bullets\\viewer\\viewer_app.py"]
+        #TODO : enter the path to the viewer_app relative to the script
+        to_make_as_an_arg = "../log"
+        sys.argv = ["streamlit", "run", "../src\\bullets\\viewer\\viewer_app.py", "--", "--file", os.path.basename(self.strategy.output_folder), "--path_to_log", to_make_as_an_arg]
         stcli.main()

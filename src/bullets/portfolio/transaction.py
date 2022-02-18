@@ -8,6 +8,14 @@ class Status(Enum):
     FAILED_INSUFFICIENT_FUNDS = "Failed - Insufficient Funds"
     FAILED_SYMBOL_NOT_FOUND = "Failed - Symbol not found"
 
+    def __str__(self):
+        if self == Status.SUCCESSFUL:
+            return "SUCCESSFUL"
+        elif self == Status.FAILED_INSUFFICIENT_FUNDS:
+            return "FAILED_INSUFFICIENT_FUNDS"
+        elif self == Status.FAILED_SYMBOL_NOT_FOUND:
+            return "FAILED_SYMBOL_NOT_FOUND"
+
 
 class Transaction:
     def __init__(self, symbol: str, nb_shares: float, theoretical_price: float, simulated_price: float,
@@ -37,3 +45,17 @@ class Transaction:
         if self.status == Status.FAILED_INSUFFICIENT_FUNDS:
             log += " -  cash balance : " + str(self.cash_balance) + "$"
         logger.info(log)
+
+    def to_dict(self):
+        self_dict = {}
+        self_dict['timestamp'] = self.timestamp.__str__()
+        self_dict['symbol'] = self.symbol
+        self_dict['nb_shares'] = self.nb_shares
+        self_dict['theorical_price'] = self.theoretical_price
+        self_dict['simulated_price'] = self.simulated_price
+        self_dict['total_price'] = self.total_price
+        self_dict['cash_balance'] = self.cash_balance
+        self_dict['status'] = self.status.__str__()
+        self_dict['transaction_fees'] = self.transaction_fees
+        self_dict['order_type'] = self.order_type
+        return self_dict
