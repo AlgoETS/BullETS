@@ -3,6 +3,7 @@ import math
 from datetime import datetime, date, timedelta
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.data_source.recorded_data import *
+from bullets.data_storage.cache_storage import *
 
 
 class FmpDataSource(DataSourceInterface):
@@ -59,9 +60,9 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        already_cached = self._get_cached_price(symbol, wanted_date, value)
+        cached_value = check_data_in_cache(CacheEndpoint.PRICE, symbol, self.resolution.name, timestamp)
 
-        if already_cached is None:
+        if cached_value is None:
             self._store_price_points(symbol, wanted_date.date())
             newly_cached = self._get_cached_price(symbol, wanted_date, value)
             if newly_cached is None:
@@ -69,7 +70,7 @@ class FmpDataSource(DataSourceInterface):
             else:
                 return newly_cached
         else:
-            return already_cached
+            return cached_value
 
     def get_income_statement(self, symbol: str, timestamp: date = None) -> IncomeStatement:
         """
@@ -245,6 +246,7 @@ class FmpDataSource(DataSourceInterface):
             interval = "from=" + str(start_date) + "&to=" + str(current_end_date)
             url = self.URL_BASE_FMP + url_resolution + symbol + "?" + interval + "&apikey=" + self.token
             response = self.request(url)
+            store_data_in_cache(CacheEndpoint.PRICE, symbol, self.resolution.name, response)
 
             if stock.start_date is None or stock.start_date > start_date:
                 stock.start_date = start_date
