@@ -1,2 +1,2 @@
-def find_value(data: str, value: str):
+def get_data(data: str, value: str):
     pass

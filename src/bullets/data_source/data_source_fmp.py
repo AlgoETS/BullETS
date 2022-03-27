@@ -60,15 +60,11 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        cached_value = check_data_in_cache(CacheEndpoint.PRICE, symbol, self.resolution.name, timestamp)
+        cached_value = get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, wanted_date, value)
 
         if cached_value is None:
             self._store_price_points(symbol, wanted_date.date())
-            newly_cached = self._get_cached_price(symbol, wanted_date, value)
-            if newly_cached is None:
-                return None
-            else:
-                return newly_cached
+            return get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, wanted_date, value)
         else:
             return cached_value
 
@@ -221,7 +217,6 @@ class FmpDataSource(DataSourceInterface):
 
     def _store_price_points(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None,
                             limit: int = 1000):
-        stock = self._get_or_create_stock(symbol)
 
         if self.resolution == Resolution.DAILY:
             url_resolution = "historical-price-full/"
@@ -246,42 +241,33 @@ class FmpDataSource(DataSourceInterface):
             interval = "from=" + str(start_date) + "&to=" + str(current_end_date)
             url = self.URL_BASE_FMP + url_resolution + symbol + "?" + interval + "&apikey=" + self.token
             response = self.request(url)
-            store_data_in_cache(CacheEndpoint.PRICE, symbol, self.resolution.name, response)
-
-            if stock.start_date is None or stock.start_date > start_date:
-                stock.start_date = start_date
-
-            if stock.end_date is None or stock.end_date < current_end_date:
-                stock.end_date = current_end_date
+            store_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, response)
 
             if response == "{ }":
                 break
+
             result = json.loads(response)
             if self.resolution == Resolution.DAILY:
                 data = result["historical"]
             else:
                 data = result
 
-            first_date = current_end_date
+            data_size = len(data)
+            entry = data[data_size-1]
+            price_point = PricePoint(entry)
+            if self.resolution == Resolution.DAILY:
+                stock_date = datetime.strptime(price_point.date + " 00:00:00", "%Y-%m-%d %H:%M:%S")
+            else:
+                stock_date = datetime.strptime(price_point.date, "%Y-%m-%d %H:%M:%S")
+            current_date = stock_date.date()
 
-            for entry in data:
-                price_point = PricePoint(entry)
-                if self.resolution == Resolution.DAILY:
-                    stock_date = datetime.strptime(price_point.date + " 00:00:00", "%Y-%m-%d %H:%M:%S")
-                else:
-                    stock_date = datetime.strptime(price_point.date, "%Y-%m-%d %H:%M:%S")
-
-                stock.price_points[stock_date] = price_point
-                first_date = stock_date.date()
-            if current_end_date == first_date:
+            if current_end_date == current_date:
                 finished = True
             else:
-                current_end_date = first_date
+                current_end_date = current_date
 
-            if first_date <= start_date:
+            if current_date <= start_date:
                 finished = True
-
-        self.stocks[symbol] = stock
 
     def _store_income_statements(self, symbol: str):
         stock = self._get_or_create_stock(symbol)
