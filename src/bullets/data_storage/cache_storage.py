@@ -1,16 +1,16 @@
-import json
 from enum import Enum
 from appdirs import *
 
-from bullets.data_storage.endpoints import cache_price as cp
-from bullets.data_storage.endpoints import cache_statement as cs
-from bullets.data_storage.endpoints import cache_list as cl
+from bullets.data_storage.endpoints.cache_price import CachePrice
+from bullets.data_storage.endpoints.cache_statement import CacheStatement
 
 
 class CacheEndpoint(Enum):
-    PRICE = "PRICE"
-    STATEMENT = "STATEMENT"
-    LIST = "LIST"
+    """
+    This enum links the different cache endpoints with their respective CacheInterface class
+    """
+    PRICE = CachePrice
+    STATEMENT = CacheStatement
 
 
 APP_NAME = "BullETS"
@@ -18,40 +18,38 @@ APP_AUTHOR = "AlgoETS"
 CACHE = user_cache_dir(APP_NAME, APP_AUTHOR)
 
 
-def store_data_in_cache(endpoint: CacheEndpoint, section: str, symbol: str, data: str):
-    file = os.path.join(CACHE, endpoint.value, section, symbol + ".json")
+def store_data_in_cache(endpoint: CacheEndpoint, section: str, file_name: str, data: str):
+    """
+    Stores the new data in the cache
+    If this endpoint/section/symbol is new, save data to a new file (symbol)
+    If this endpoint/section/symbol already exists, merge the new data with the old data in the right file (symbol)
+    Args:
+        endpoint: Endpoint in which the data will be stored (folder)
+        section: Section of the endpoint in which the data will be stored (folder)
+        file_name: Name of the file where the data will be saved
+        data: The data that needs to be stored
+    """
+    file = os.path.join(CACHE, endpoint.name, section, file_name + ".json")
     os.makedirs(os.path.dirname(file), exist_ok=True)
     if os.path.isfile(file):
-        _store_data_in_endpoint(endpoint, section, data, file)
+        endpoint.value.merge_data(section, data, file)
     else:
-        with open(file, "w") as outputFile:
-            outputFile.write(data)
+        endpoint.value.post_data(section, data, file)
 
 
-def get_data_in_cache(endpoint: CacheEndpoint, section: str, symbol: str, timestamp: str, value: str):
-    file = os.path.join(CACHE, endpoint.value, section, symbol + ".json")
+def get_data_in_cache(endpoint: CacheEndpoint, section: str, file_name: str, timestamp: str, value: str):
+    """
+    Gets a specific value in the cache
+    Args:
+         endpoint: Endpoint in which the data is stored (folder)
+         section: Section of the endpoint in which the data is stored (folder)
+         file_name: Name of the file where the data is stored
+         timestamp: The date/datetime of the value you need
+         value: Specific value of the stored object you want (ex : open, low, close, etc.)
+    """
+    file = os.path.join(CACHE, endpoint.name, section, file_name + ".json")
+    os.makedirs(os.path.dirname(file), exist_ok=True)
     if os.path.isfile(file):
-        with open(file, "r") as dataFile:
-            data = json.load(dataFile)
-        return _get_data_in_endpoint(endpoint, section, data, timestamp, value)
+        return endpoint.value.get_data(section, file, timestamp, value)
     else:
         return None
-
-
-def _store_data_in_endpoint(endpoint: CacheEndpoint, section: str, new_data: str, file: bytes):
-    if endpoint is CacheEndpoint.PRICE:
-        return cp.store_data(section, new_data, file)
-    elif endpoint is CacheEndpoint.STATEMENT:
-        return cs.store_data(section, new_data, file)
-    elif endpoint is CacheEndpoint.LIST:
-        return cl.store_data(section, new_data, file)
-
-
-def _get_data_in_endpoint(endpoint: CacheEndpoint, section: str, data: str, timestamp: str, value: str):
-    if endpoint is CacheEndpoint.PRICE:
-        return cp.get_data(section, data, timestamp, value)
-    elif endpoint is CacheEndpoint.STATEMENT:
-        return cs.get_data(data, value)
-    elif endpoint is CacheEndpoint.LIST:
-        return cl.get_data(data, value)
-
