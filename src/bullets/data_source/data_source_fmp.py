@@ -1,7 +1,7 @@
 import json
 from datetime import date, timedelta
 
-from bullets.utils.market_utils import is_market_open, get_date_in_x_market_days_away
+from bullets.utils.market_utils import is_market_open, get_date_in_x_market_days_away, get_moments
 
 from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.data_source.recorded_data import *
@@ -16,39 +16,63 @@ class FmpDataSource(DataSourceInterface):
         super().__init__()
         self.token = token
         self.resolution = resolution
-        self.stocks = {}  # TODO : REMOVE
 
-    def get_historical_daily_prices(self, symbol: str, start_date: date, end_date: date = None):
+    def get_prices(self, symbol: str, start_timestamp: datetime, end_timestamp: datetime = None, delta: int = None,
+                   value: str = None):
         """
-        Gets the historical prices of the given stock for the given interval period
+        Gets the prices of the given stock for the given interval period
+        Can be between two dates or from a delta timeframe
         Args:
             symbol: Symbol of the stock/forex
-            start_date: Starting time of the interval of historical prices
-            end_date: Ending time of the interval of historical price. Default value is the time of the backtest
+            start_timestamp: Starting time of the interval wanted
+            end_timestamp: Ending time of the interval wanted
+            delta: Time delta from the start_timestamp wanted
+            value: Value of the stock you want, default is close
         Returns: An array of the closing price of the stock for every day between the interval
         """
-        # TODO : CHANGE THIS FUNCTION, IT DOES NOT RESPECT OUR STANDARDS
-        if end_date is None:
-            end_date = self.timestamp.date()
-
-        if symbol not in self.stocks:
-            self._store_price_points(symbol, start_date, end_date)
+        if start_timestamp is None:
+            start_date = self.timestamp
         else:
-            stock = self.stocks[symbol]
+            start_date = start_timestamp
 
-            # This makes sure we're not querying price points we already have.
-            if stock.start_date is not None and stock.start_date > start_date:
-                uncached_start_date = start_date
-                uncached_end_date = stock.start_date
-                self._store_price_points(symbol, uncached_start_date, uncached_end_date)
+        if end_timestamp is None and delta is None:
+            raise ValueError("End timestamp and delta cannot be None, one or the other has to be entered.")
 
-            if stock.end_date is not None and stock.end_date < end_date:
-                uncached_end_date = end_date
-                uncached_start_date = stock.end_date
-                self._store_price_points(symbol, uncached_start_date, uncached_end_date)
+        if not is_market_open(start_date):
+            start_date = get_date_in_x_market_days_away(1, start_date)
 
-        return [p for p in self.stocks[symbol].price_points.values()
-                if start_date <= datetime.strptime(p.date, "%Y-%m-%d").date() <= end_date]
+        if end_timestamp is not None and not is_market_open(end_timestamp):
+            end_timestamp = get_date_in_x_market_days_away(1, end_timestamp)
+
+        prices = []
+        moments = []
+        has_stored = False
+
+        if end_timestamp is None:
+            moments = get_moments(self.resolution, start_date, get_date_in_x_market_days_away(delta, start_date))
+        else:
+            moments = get_moments(self.resolution, start_date, end_timestamp)
+
+        for moment in moments:
+            cached_value = get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, moment, value)
+
+            if cached_value is None:
+                if has_stored is False:
+                    if end_timestamp is None:
+                        self._store_price_points(symbol, moment, limit=delta)
+                    else:
+                        self._store_price_points(symbol, moment, end_date=end_timestamp)
+                    has_stored = True
+                    newly_cached_value = get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, moment,
+                                                           value)
+                    if newly_cached_value is not None:
+                        price = {"date": moment.strftime("%Y-%m-%d"), "value": newly_cached_value}
+                        prices.append(price)
+            else:
+                price = {"date": moment.strftime("%Y-%m-%d"), "value": cached_value}
+                prices.append(price)
+
+        return prices
 
     def get_price(self, symbol: str, timestamp: datetime = None, value: str = None) -> int:
         """
@@ -56,7 +80,7 @@ class FmpDataSource(DataSourceInterface):
         Args:
             symbol: Symbol of the stock/forex
             timestamp: Time of the data you want. If you want the current time of the backtest, leave empty
-            value: Value of the stock you want (open, close, low, high, etc)
+            value: Value of the stock you want, default is close
         Returns: The stock price at the given timestamp
         """
         if timestamp is None:
@@ -210,12 +234,16 @@ class FmpDataSource(DataSourceInterface):
 
         if end_date is None:
             end_date = get_date_in_x_market_days_away(limit, start_date)
+            if type(end_date) is datetime:
+                end_date = end_date.date()
             if end_date > date.today():
                 end_date = date.today()
 
         current_end_date = end_date
         finished = False
 
+        if type(start_date) is datetime:
+            start_date = start_date.date()
         if start_date > date.today():
             finished = True
 

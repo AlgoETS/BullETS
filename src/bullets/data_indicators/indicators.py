@@ -1,3 +1,5 @@
+from bullets.utils.market_utils import is_market_open
+
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
 from bullets.runner import Runner
 from datetime import datetime, timedelta
@@ -31,7 +33,7 @@ class Indicators:
             date -= timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
         for x in range(period):
@@ -39,7 +41,7 @@ class Indicators:
             date += timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
 
             #Fetch stock value
@@ -79,7 +81,7 @@ class Indicators:
             date -= timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
         for x in range(period):
@@ -87,7 +89,7 @@ class Indicators:
             date += timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
 
             # Fetch stock value
@@ -124,7 +126,7 @@ class Indicators:
             date -= timedelta(days=1)
 
             #Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
         ema = self.sma(symbol, period, date)
@@ -134,7 +136,7 @@ class Indicators:
             date += timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
 
             price = self.data_source.get_price(symbol=symbol, timestamp=date)
@@ -186,7 +188,7 @@ class Indicators:
             date -= timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
         for x in range(period):
@@ -194,7 +196,7 @@ class Indicators:
             date += timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
 
             # fill each value
@@ -237,7 +239,7 @@ class Indicators:
             date -= timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date -= timedelta(days=1)
 
         for x in range(period):
@@ -245,7 +247,7 @@ class Indicators:
             date += timedelta(days=1)
 
             # Make sure market is open
-            while not Runner._is_market_open(date, Resolution.DAILY):
+            while not is_market_open(date, Resolution.DAILY):
                 date += timedelta(days=1)
 
             # fill each value

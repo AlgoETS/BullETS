@@ -5,6 +5,7 @@ from bullets.data_source.data_source_interface import Resolution
 from bullets.data_source.data_source_fmp import FmpDataSource
 from bullets import logger
 from bullets.utils.holiday_date_util import us_holiday_list
+from bullets.utils.market_utils import get_moments
 
 
 class Runner:
@@ -19,7 +20,7 @@ class Runner:
         if self.strategy is None:
             raise TypeError("No strategy was attached to the runner.")
         logger.info("=========== Backtest started ===========")
-        moments = self._get_moments(self.strategy.resolution, self.strategy.start_time, self.strategy.end_time)
+        moments = get_moments(self.strategy.resolution, self.strategy.start_time, self.strategy.end_time)
         self.strategy.update_time(moments[0])
         self.strategy.on_start()
         for moment in moments:
@@ -28,38 +29,6 @@ class Runner:
             self.strategy.portfolio.on_resolution()
         self.strategy.on_finish()
         self._post_backtest_log()
-
-    def _get_moments(self, resolution: Resolution, start_time: datetime, end_time: datetime):
-        moments = []
-        current_time = start_time
-
-        while current_time != end_time:
-            if resolution == Resolution.DAILY:
-                current_time = current_time + timedelta(days=1)
-            elif resolution == Resolution.HOURLY:
-                current_time = current_time + timedelta(hours=1)
-            elif resolution == Resolution.MINUTE:
-                current_time = current_time + timedelta(minutes=1)
-
-            if self._is_market_open(current_time, resolution):
-                moments.append(current_time)
-
-        return moments
-
-    @staticmethod
-    def _is_market_open(date: datetime, resolution: Resolution) -> bool:
-        if date.weekday() >= 5:
-            return False
-
-        if resolution != Resolution.DAILY:
-            if date.hour < 9 or date.hour > 16:
-                return False
-            elif date.hour == 16 and date.minute > 0:
-                return False
-            elif date.hour == 9 and date.minute < 30:
-                return False
-
-        return date not in us_holiday_list(date.year)
 
     def _post_backtest_log(self):
         self._update_final_timestamp()
