@@ -7,6 +7,9 @@ from bullets.data_storage.endpoints.cache_interface import CacheInterface
 
 
 class CacheStatementSection(Enum):
+    """
+    This enum standardizes the cache's statement sections called in data_source_fmp and here
+    """
     INCOME = "INCOME"
     BALANCE_SHEET = "BALANCE-SHEET"
     CASH_FLOW = "CASH-FLOW"
