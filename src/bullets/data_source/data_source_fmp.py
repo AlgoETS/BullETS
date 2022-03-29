@@ -1,6 +1,8 @@
 import json
 from datetime import date, timedelta
 
+from bullets.utils.market_utils import is_market_open, get_date_in_x_market_days_away
+
 from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.data_source.recorded_data import *
 from bullets.data_storage.cache_storage import *
@@ -61,6 +63,9 @@ class FmpDataSource(DataSourceInterface):
             wanted_date = self.timestamp
         else:
             wanted_date = timestamp
+
+        if not is_market_open(wanted_date, self.resolution):
+            return None
 
         cached_value = get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, wanted_date, value)
 
@@ -204,7 +209,7 @@ class FmpDataSource(DataSourceInterface):
                 limit = 1
 
         if end_date is None:
-            end_date = start_date + timedelta(days=limit)
+            end_date = get_date_in_x_market_days_away(limit, start_date)
             if end_date > date.today():
                 end_date = date.today()
 
