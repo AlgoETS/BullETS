@@ -40,3 +40,21 @@ def get_date_in_x_market_days_away(lapse: int, start_date: datetime = datetime.t
         if is_market_open(today):
             countdown -= 1
     return today
+
+
+def get_moments(resolution: Resolution, start_time: datetime, end_time: datetime):
+    moments = []
+    current_time = start_time
+
+    while current_time != end_time:
+        if resolution == Resolution.DAILY:
+            current_time = current_time + timedelta(days=1)
+        elif resolution == Resolution.HOURLY:
+            current_time = current_time + timedelta(hours=1)
+        elif resolution == Resolution.MINUTE:
+            current_time = current_time + timedelta(minutes=1)
+
+        if is_market_open(current_time, resolution):
+            moments.append(current_time)
+
+    return moments

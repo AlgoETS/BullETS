@@ -1,8 +1,10 @@
 import json
-import math
-from datetime import datetime, date, timedelta
-from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
+from datetime import date
+from bullets.utils.market_utils import is_market_open, get_date_in_x_market_days_away, get_moments
+from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.data_source.recorded_data import *
+from bullets.data_storage.cache_storage import *
+from bullets.data_storage.endpoints.cache_statement import CacheStatementSection
 
 
 class FmpDataSource(DataSourceInterface):
@@ -12,38 +14,60 @@ class FmpDataSource(DataSourceInterface):
         super().__init__()
         self.token = token
         self.resolution = resolution
-        self.stocks = {}
 
-    def get_historical_daily_prices(self, symbol: str, start_date: date, end_date: date = None):
+    def get_prices(self, symbol: str, start_timestamp: datetime, end_timestamp: datetime = None, delta: int = 1,
+                   value: str = None):
         """
-        Gets the historical prices of the given stock for the given interval period
+        Gets the prices of the given stock for the given interval period
+        Can be between two dates or from a delta timeframe
         Args:
             symbol: Symbol of the stock/forex
-            start_date: Starting time of the interval of historical prices
-            end_date: Ending time of the interval of historical price. Default value is the time of the backtest
+            start_timestamp: Starting time of the interval wanted
+            end_timestamp: Ending time of the interval wanted
+            delta: Time delta from the start_timestamp wanted
+            value: Value of the stock you want, default is close
         Returns: An array of the closing price of the stock for every day between the interval
         """
-        if end_date is None:
-            end_date = self.timestamp.date()
-
-        if symbol not in self.stocks:
-            self._store_price_points(symbol, start_date, end_date)
+        if start_timestamp is None:
+            start_date = self.timestamp
         else:
-            stock = self.stocks[symbol]
+            start_date = start_timestamp
 
-            # This makes sure we're not querying price points we already have.
-            if stock.start_date is not None and stock.start_date > start_date:
-                uncached_start_date = start_date
-                uncached_end_date = stock.start_date
-                self._store_price_points(symbol, uncached_start_date, uncached_end_date)
+        if not is_market_open(start_date):
+            start_date = get_date_in_x_market_days_away(1, start_date)
 
-            if stock.end_date is not None and stock.end_date < end_date:
-                uncached_end_date = end_date
-                uncached_start_date = stock.end_date
-                self._store_price_points(symbol, uncached_start_date, uncached_end_date)
+        if end_timestamp is not None and not is_market_open(end_timestamp):
+            end_timestamp = get_date_in_x_market_days_away(1, end_timestamp)
 
-        return [p for p in self.stocks[symbol].price_points.values()
-                if start_date <= datetime.strptime(p.date, "%Y-%m-%d").date() <= end_date]
+        prices = []
+        moments = []
+        is_stored = False
+
+        if end_timestamp is None:
+            moments = get_moments(self.resolution, start_date, get_date_in_x_market_days_away(delta, start_date))
+        else:
+            moments = get_moments(self.resolution, start_date, end_timestamp)
+
+        for moment in moments:
+            cached_value = get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, moment, value)
+
+            if cached_value is None:
+                if is_stored is False:
+                    if end_timestamp is None:
+                        self._store_price_points(symbol, moment, limit=delta)
+                    else:
+                        self._store_price_points(symbol, moment, end_date=end_timestamp)
+                    is_stored = True
+                    newly_cached_value = get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, moment,
+                                                           value)
+                    if newly_cached_value is not None:
+                        price = {"date": moment.strftime("%Y-%m-%d"), "value": newly_cached_value}
+                        prices.append(price)
+            else:
+                price = {"date": moment.strftime("%Y-%m-%d"), "value": cached_value}
+                prices.append(price)
+
+        return prices
 
     def get_price(self, symbol: str, timestamp: datetime = None, value: str = None) -> int:
         """
@@ -51,7 +75,7 @@ class FmpDataSource(DataSourceInterface):
         Args:
             symbol: Symbol of the stock/forex
             timestamp: Time of the data you want. If you want the current time of the backtest, leave empty
-            value: Value of the stock you want (open, close, low, high, etc)
+            value: Value of the stock you want, default is close
         Returns: The stock price at the given timestamp
         """
         if timestamp is None:
@@ -59,17 +83,16 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        already_cached = self._get_cached_price(symbol, wanted_date, value)
+        if not is_market_open(wanted_date, self.resolution):
+            return None
 
-        if already_cached is None:
+        cached_value = get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, wanted_date, value)
+
+        if cached_value is None:
             self._store_price_points(symbol, wanted_date.date())
-            newly_cached = self._get_cached_price(symbol, wanted_date, value)
-            if newly_cached is None:
-                return None
-            else:
-                return newly_cached
+            return get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, wanted_date, value)
         else:
-            return already_cached
+            return cached_value
 
     def get_income_statement(self, symbol: str, timestamp: date = None) -> IncomeStatement:
         """
@@ -84,17 +107,15 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        already_cached = self._get_cached_income_statement(symbol, wanted_date)
+        cached_value = get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.INCOME.value, symbol,
+                                         wanted_date, None)
 
-        if already_cached is None:
+        if cached_value is None:
             self._store_income_statements(symbol)
-            newly_cached = self._get_cached_income_statement(symbol, wanted_date)
-            if newly_cached is None:
-                return None
-            else:
-                return newly_cached
+            return get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.INCOME.value, symbol, wanted_date,
+                                     None)
         else:
-            return already_cached
+            return cached_value
 
     def get_balance_sheet_statement(self, symbol: str, timestamp: date = None) -> BalanceSheetStatement:
         """
@@ -109,17 +130,15 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        already_cached = self._get_cached_balance_sheet_statement(symbol, wanted_date)
+        cached_value = get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol,
+                                         wanted_date, None)
 
-        if already_cached is None:
+        if cached_value is None:
             self._store_balance_sheet_statements(symbol)
-            newly_cached = self._get_cached_balance_sheet_statement(symbol, wanted_date)
-            if newly_cached is None:
-                return None
-            else:
-                return newly_cached
+            return get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol,
+                                     wanted_date, None)
         else:
-            return already_cached
+            return cached_value
 
     def get_cash_flow_statement(self, symbol: str, timestamp: date = None) -> CashFlowStatement:
         """
@@ -134,17 +153,15 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        already_cached = self._get_cached_cash_flow_statement(symbol, wanted_date)
+        cached_value = get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol,
+                                         wanted_date, None)
 
-        if already_cached is None:
+        if cached_value is None:
             self._store_cash_flow_statements(symbol)
-            newly_cached = self._get_cached_cash_flow_statement(symbol, wanted_date)
-            if newly_cached is None:
-                return None
-            else:
-                return newly_cached
+            return get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol,
+                                     wanted_date, None)
         else:
-            return already_cached
+            return cached_value
 
     def get_symbol_list(self) -> list:
         """
@@ -194,153 +211,82 @@ class FmpDataSource(DataSourceInterface):
 
         return int(json.loads(response)['result'])
 
-    def _get_cached_price(self, symbol: str, wanted_date: datetime, value: str):
-        if symbol in self.stocks:
-            stock = self.stocks[symbol]
-            if wanted_date in stock.price_points:
-                return self._get_specific_price_value(wanted_date, stock, value)
-
-    def _get_cached_income_statement(self, symbol: str, wanted_date: date):
-        if symbol in self.stocks:
-            stock = self.stocks[symbol]
-            if wanted_date in stock.income_statements:
-                return stock.income_statements[wanted_date]
-
-    def _get_cached_balance_sheet_statement(self, symbol: str, wanted_date: date):
-        if symbol in self.stocks:
-            stock = self.stocks[symbol]
-            if wanted_date in stock.balance_sheet_statements:
-                return stock.balance_sheet_statements[wanted_date]
-
-    def _get_cached_cash_flow_statement(self, symbol: str, wanted_date: date):
-        if symbol in self.stocks:
-            stock = self.stocks[symbol]
-            if wanted_date in stock.cash_flow_statements:
-                return stock.cash_flow_statements[wanted_date]
-
     def _store_price_points(self, symbol: str, start_date: datetime.date, end_date: datetime.date = None,
-                            limit: int = 1000):
-        stock = self._get_or_create_stock(symbol)
+                            limit: int = None):
 
         if self.resolution == Resolution.DAILY:
             url_resolution = "historical-price-full/"
         else:
             url_resolution = "historical-chart/" + str(self.resolution.value) + "/"
 
-        if end_date is None:
-            nb_entree = limit
+        if limit is None:
+            if self.resolution == Resolution.DAILY:
+                limit = 10
             if self.resolution == Resolution.HOURLY:
-                nb_entree = math.ceil(nb_entree / 6)
+                limit = 1
             elif self.resolution == Resolution.MINUTE:
-                nb_entree = math.ceil(nb_entree / 390)
+                limit = 1
 
-            end_date = start_date + timedelta(days=nb_entree)
+        if end_date is None:
+            end_date = get_date_in_x_market_days_away(limit, start_date)
+            if type(end_date) is datetime:
+                end_date = end_date.date()
             if end_date > date.today():
                 end_date = date.today()
 
         current_end_date = end_date
         finished = False
 
+        if type(start_date) is datetime:
+            start_date = start_date.date()
+        if start_date > date.today():
+            finished = True
+
         while not finished:
             interval = "from=" + str(start_date) + "&to=" + str(current_end_date)
             url = self.URL_BASE_FMP + url_resolution + symbol + "?" + interval + "&apikey=" + self.token
             response = self.request(url)
 
-            if stock.start_date is None or stock.start_date > start_date:
-                stock.start_date = start_date
-
-            if stock.end_date is None or stock.end_date < current_end_date:
-                stock.end_date = current_end_date
-
-            if response == "{ }":
+            if response == "{ }" or response == "[ ]" or response is None:
                 break
+
+            store_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, response)
             result = json.loads(response)
+
             if self.resolution == Resolution.DAILY:
                 data = result["historical"]
             else:
                 data = result
 
-            first_date = current_end_date
+            if len(data) == 0:
+                break
 
-            for entry in data:
-                price_point = PricePoint(entry)
-                if self.resolution == Resolution.DAILY:
-                    stock_date = datetime.strptime(price_point.date + " 00:00:00", "%Y-%m-%d %H:%M:%S")
-                else:
-                    stock_date = datetime.strptime(price_point.date, "%Y-%m-%d %H:%M:%S")
+            last_price_point = PricePoint(data[len(data) - 1])
 
-                stock.price_points[stock_date] = price_point
-                first_date = stock_date.date()
-            if current_end_date == first_date:
+            if self.resolution == Resolution.DAILY:
+                last_price_point_date = datetime.strptime(last_price_point.date + " 00:00:00", "%Y-%m-%d %H:%M:%S")
+            else:
+                last_price_point_date = datetime.strptime(last_price_point.date, "%Y-%m-%d %H:%M:%S")
+
+            if last_price_point_date.date() <= start_date or last_price_point_date.date() == current_end_date:
                 finished = True
             else:
-                current_end_date = first_date
-
-            if first_date <= start_date:
-                finished = True
-
-        self.stocks[symbol] = stock
+                current_end_date = last_price_point_date.date()
 
     def _store_income_statements(self, symbol: str):
-        stock = self._get_or_create_stock(symbol)
 
         url = self.URL_BASE_FMP + "income-statement/" + symbol + "?apikey=" + self.token
         response = self.request(url)
-        result = json.loads(response)
-
-        for entry in result:
-            income_statement = IncomeStatement(entry)
-            income_statement_date = datetime.strptime(income_statement.date, "%Y-%m-%d").date()
-            stock.income_statements[income_statement_date] = income_statement
-
-        self.stocks[symbol] = stock
+        store_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.INCOME.value, symbol, response)
 
     def _store_balance_sheet_statements(self, symbol: str):
-        stock = self._get_or_create_stock(symbol)
 
         url = self.URL_BASE_FMP + "balance-sheet-statement/" + symbol + "?apikey=" + self.token
         response = self.request(url)
-        result = json.loads(response)
-
-        for entry in result:
-            balance_sheet_statement = BalanceSheetStatement(entry)
-            balance_sheet_statement_date = datetime.strptime(balance_sheet_statement.date, "%Y-%m-%d").date()
-            stock.balance_sheet_statements[balance_sheet_statement_date] = balance_sheet_statement
-
-        self.stocks[symbol] = stock
+        store_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol, response)
 
     def _store_cash_flow_statements(self, symbol: str):
-        stock = self._get_or_create_stock(symbol)
 
         url = self.URL_BASE_FMP + "cash-flow-statement/" + symbol + "?apikey=" + self.token
         response = self.request(url)
-        result = json.loads(response)
-
-        for entry in result:
-            cash_flow_statement = CashFlowStatement(entry)
-            cash_flow_statement_date = datetime.strptime(cash_flow_statement.date, "%Y-%m-%d").date()
-            stock.cash_flow_statements[cash_flow_statement_date] = cash_flow_statement
-
-        self.stocks[symbol] = stock
-
-    @staticmethod
-    def _get_specific_price_value(date: datetime, stock: Stock, value: str):
-        if value is None or value == "close":
-            return stock.price_points[date].close
-        elif value == "date":
-            return stock.price_points[date].date
-        elif value == "open":
-            return stock.price_points[date].open
-        elif value == "low":
-            return stock.price_points[date].low
-        elif value == "high":
-            return stock.price_points[date].high
-        elif value == "volume":
-            return stock.price_points[date].volume
-
-    def _get_or_create_stock(self, symbol: str) -> Stock:
-        if symbol in self.stocks:
-            stock = self.stocks[symbol]
-        else:
-            stock = Stock(symbol, self.resolution)
-        return stock
+        store_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol, response)
