@@ -1,7 +1,5 @@
 from bullets.utils.market_utils import is_market_open
-
 from bullets.data_source.data_source_interface import DataSourceInterface, Resolution
-from bullets.runner import Runner
 from datetime import datetime, timedelta
 import math
 

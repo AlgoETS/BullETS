@@ -1,8 +1,6 @@
 import json
-from datetime import date, timedelta
-
+from datetime import date
 from bullets.utils.market_utils import is_market_open, get_date_in_x_market_days_away, get_moments
-
 from bullets.data_source.data_source_interface import DataSourceInterface
 from bullets.data_source.recorded_data import *
 from bullets.data_storage.cache_storage import *
@@ -17,7 +15,7 @@ class FmpDataSource(DataSourceInterface):
         self.token = token
         self.resolution = resolution
 
-    def get_prices(self, symbol: str, start_timestamp: datetime, end_timestamp: datetime = None, delta: int = None,
+    def get_prices(self, symbol: str, start_timestamp: datetime, end_timestamp: datetime = None, delta: int = 1,
                    value: str = None):
         """
         Gets the prices of the given stock for the given interval period
@@ -35,9 +33,6 @@ class FmpDataSource(DataSourceInterface):
         else:
             start_date = start_timestamp
 
-        if end_timestamp is None and delta is None:
-            raise ValueError("End timestamp and delta cannot be None, one or the other has to be entered.")
-
         if not is_market_open(start_date):
             start_date = get_date_in_x_market_days_away(1, start_date)
 
@@ -46,7 +41,7 @@ class FmpDataSource(DataSourceInterface):
 
         prices = []
         moments = []
-        has_stored = False
+        is_stored = False
 
         if end_timestamp is None:
             moments = get_moments(self.resolution, start_date, get_date_in_x_market_days_away(delta, start_date))
@@ -54,16 +49,16 @@ class FmpDataSource(DataSourceInterface):
             moments = get_moments(self.resolution, start_date, end_timestamp)
 
         for moment in moments:
-            cached_value = get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, moment, value)
+            cached_value = get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, moment, value)
 
             if cached_value is None:
-                if has_stored is False:
+                if is_stored is False:
                     if end_timestamp is None:
                         self._store_price_points(symbol, moment, limit=delta)
                     else:
                         self._store_price_points(symbol, moment, end_date=end_timestamp)
-                    has_stored = True
-                    newly_cached_value = get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, moment,
+                    is_stored = True
+                    newly_cached_value = get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, moment,
                                                            value)
                     if newly_cached_value is not None:
                         price = {"date": moment.strftime("%Y-%m-%d"), "value": newly_cached_value}
@@ -91,11 +86,11 @@ class FmpDataSource(DataSourceInterface):
         if not is_market_open(wanted_date, self.resolution):
             return None
 
-        cached_value = get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, wanted_date, value)
+        cached_value = get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, wanted_date, value)
 
         if cached_value is None:
             self._store_price_points(symbol, wanted_date.date())
-            return get_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, wanted_date, value)
+            return get_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, wanted_date, value)
         else:
             return cached_value
 
@@ -112,12 +107,12 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        cached_value = get_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.INCOME.value, symbol,
+        cached_value = get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.INCOME.value, symbol,
                                          wanted_date, None)
 
         if cached_value is None:
             self._store_income_statements(symbol)
-            return get_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.INCOME.value, symbol, wanted_date,
+            return get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.INCOME.value, symbol, wanted_date,
                                      None)
         else:
             return cached_value
@@ -135,12 +130,12 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        cached_value = get_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol,
+        cached_value = get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol,
                                          wanted_date, None)
 
         if cached_value is None:
             self._store_balance_sheet_statements(symbol)
-            return get_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol,
+            return get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol,
                                      wanted_date, None)
         else:
             return cached_value
@@ -158,12 +153,12 @@ class FmpDataSource(DataSourceInterface):
         else:
             wanted_date = timestamp
 
-        cached_value = get_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol,
+        cached_value = get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol,
                                          wanted_date, None)
 
         if cached_value is None:
             self._store_cash_flow_statements(symbol)
-            return get_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol,
+            return get_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol,
                                      wanted_date, None)
         else:
             return cached_value
@@ -252,16 +247,19 @@ class FmpDataSource(DataSourceInterface):
             url = self.URL_BASE_FMP + url_resolution + symbol + "?" + interval + "&apikey=" + self.token
             response = self.request(url)
 
-            if response == "{ }" or response is None:
+            if response == "{ }" or response == "[ ]" or response is None:
                 break
 
-            store_data_in_cache(CacheEndpoint.PRICE, self.resolution.name, symbol, response)
+            store_data_in_cache(LocalCache.PRICE, self.resolution.name, symbol, response)
             result = json.loads(response)
 
             if self.resolution == Resolution.DAILY:
                 data = result["historical"]
             else:
                 data = result
+
+            if len(data) == 0:
+                break
 
             last_price_point = PricePoint(data[len(data) - 1])
 
@@ -279,16 +277,16 @@ class FmpDataSource(DataSourceInterface):
 
         url = self.URL_BASE_FMP + "income-statement/" + symbol + "?apikey=" + self.token
         response = self.request(url)
-        store_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.INCOME.value, symbol, response)
+        store_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.INCOME.value, symbol, response)
 
     def _store_balance_sheet_statements(self, symbol: str):
 
         url = self.URL_BASE_FMP + "balance-sheet-statement/" + symbol + "?apikey=" + self.token
         response = self.request(url)
-        store_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol, response)
+        store_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.BALANCE_SHEET.value, symbol, response)
 
     def _store_cash_flow_statements(self, symbol: str):
 
         url = self.URL_BASE_FMP + "cash-flow-statement/" + symbol + "?apikey=" + self.token
         response = self.request(url)
-        store_data_in_cache(CacheEndpoint.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol, response)
+        store_data_in_cache(LocalCache.STATEMENT, CacheStatementSection.CASH_FLOW.value, symbol, response)

@@ -5,7 +5,7 @@ from bullets.data_storage.endpoints.cache_price import CachePrice
 from bullets.data_storage.endpoints.cache_statement import CacheStatement
 
 
-class CacheEndpoint(Enum):
+class LocalCache(Enum):
     """
     This enum links the different cache endpoints with their respective CacheInterface class
     """
@@ -18,7 +18,7 @@ APP_AUTHOR = "AlgoETS"
 CACHE = user_cache_dir(APP_NAME, APP_AUTHOR)
 
 
-def store_data_in_cache(endpoint: CacheEndpoint, section: str, file_name: str, data: str):
+def store_data_in_cache(endpoint: LocalCache, section: str, file_name: str, data: str):
     """
     Stores the new data in the cache
     If this endpoint/section/symbol is new, save data to a new file (symbol)
@@ -37,7 +37,7 @@ def store_data_in_cache(endpoint: CacheEndpoint, section: str, file_name: str, d
         endpoint.value.post_data(section, data, file)
 
 
-def get_data_in_cache(endpoint: CacheEndpoint, section: str, file_name: str, timestamp: str, value: str):
+def get_data_in_cache(endpoint: LocalCache, section: str, file_name: str, timestamp: str, value: str):
     """
     Gets a specific value in the cache
     Args:

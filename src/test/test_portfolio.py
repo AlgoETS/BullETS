@@ -160,35 +160,41 @@ class TestPortfolio(unittest.TestCase):
 
     @mock.patch('bullets.data_source.data_source_interface.DataSourceInterface.get_price', return_value=130.33)
     def test_get_total_fees_paid(self, mock_get_price):
-        date = datetime.datetime(2021, 6, 14, 15, 57)
-        data_source = FmpDataSource(os.getenv("FMP_TOKEN"), Resolution.MINUTE)
-        expected_fees_paid = 15
-        # Allocating just enough money to buy 10 shares of Apple
-        balance = (mock_get_price() * 10) + expected_fees_paid
-        portfolio = Portfolio(balance, data_source, 25, 1.5)
-        data_source.timestamp = date
-        portfolio.timestamp = date
+        try:
+            logger.set_log_level("WARNING")
+            date = datetime.datetime(2021, 6, 14, 15, 57)
+            data_source = FmpDataSource(os.getenv("FMP_TOKEN"), Resolution.MINUTE)
+            expected_fees_paid = 15
+            # Allocating just enough money to buy 10 shares of Apple
+            balance = (mock_get_price() * 10) + expected_fees_paid
+            portfolio = Portfolio(balance, data_source, 25, 1.5)
+            data_source.timestamp = date
+            portfolio.timestamp = date
 
-        for _ in range(10):
+            for _ in range(10):
+                portfolio.market_order("AAPL", 1)
+
+            self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
+
+            # Failed orders have no incidence on the total amount of fees
+            portfolio.market_order("AAPL", 1)
+            self.assertEqual(Status.FAILED_INSUFFICIENT_FUNDS, portfolio.transactions[-1].status)
+            self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
+
+            portfolio.market_order("STONKS", 1)
+            self.assertEqual(Status.FAILED_SYMBOL_NOT_FOUND, portfolio.transactions[-1].status)
+            self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
+
+            # Each transaction can have a different amount of fees
+            portfolio.transaction_fees = 5
+            portfolio.cash_balance += mock_get_price() + 5
             portfolio.market_order("AAPL", 1)
 
-        self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
-
-        # Failed orders have no incidence on the total amount of fees
-        portfolio.market_order("AAPL", 1)
-        self.assertEqual(Status.FAILED_INSUFFICIENT_FUNDS, portfolio.transactions[-1].status)
-        self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
-
-        portfolio.market_order("STONKS", 1)
-        self.assertEqual(Status.FAILED_SYMBOL_NOT_FOUND, portfolio.transactions[-1].status)
-        self.assertEqual(expected_fees_paid, portfolio.get_total_fees_paid())
-
-        # Each transaction can have a different amount of fees
-        portfolio.transaction_fees = 5
-        portfolio.cash_balance += mock_get_price() + 5
-        portfolio.market_order("AAPL", 1)
-
-        self.assertEqual(expected_fees_paid + 5, portfolio.get_total_fees_paid())
+            self.assertEqual(expected_fees_paid + 5, portfolio.get_total_fees_paid())
+            logger.set_log_level("INFO")
+            logger.info("Portfolio total fees paid test successful")
+        finally:
+            pass
 
 
 if __name__ == '__main__':
