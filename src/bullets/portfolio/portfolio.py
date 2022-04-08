@@ -85,22 +85,25 @@ class Portfolio:
         """
         Runs at every resolution to run the stop and limit orders
         """
-        for order in self.pending_buy_stop_orders:
+        # TODO: The pending orders need to be sorted by prices to the cheapest orders are bought first and the opposit for sell orders
+        # TODO: The orders are not deleted from the lists when activated, it's not a desirable behaviour
+        for index, order in enumerate(self.pending_buy_stop_orders):
             price = self.data_source.get_price(order.symbol)
             if price <= order.price:
                 self._order(order.symbol, order.nb_shares, "Buy Stop Order")
 
-        for order in self.pending_sell_stop_orders:
+        for index, order in enumerate(self.pending_sell_stop_orders):
             price = self.data_source.get_price(order.symbol)
             if price >= order.price:
                 self._order(order.symbol, order.nb_shares, "Sell Stop Order")
+                del self.pending_sell_stop_orders[index]
 
-        for order in self.pending_buy_limit_orders:
+        for index, order in enumerate(self.pending_buy_limit_orders):
             price = self.data_source.get_price(order.symbol)
             if price <= order.price:
                 self._order(order.symbol, order.nb_shares, "Buy Limit Order")
 
-        for order in self.pending_sell_limit_orders:
+        for index, order in enumerate(self.pending_sell_limit_orders):
             price = self.data_source.get_price(order.symbol)
             if price >= order.price:
                 self._order(order.symbol, order.nb_shares, "Sell Limit Order")
@@ -151,8 +154,10 @@ class Portfolio:
                 status = Status.SUCCESSFUL
             else:
                 status = Status.FAILED_INSUFFICIENT_FUNDS
+
         return Transaction(symbol, nb_shares, theoretical_price, simulated_price, self.timestamp, self.cash_balance,
-                           status, transaction_fees, order_type)
+                           status, transaction_fees, order_type,
+                           total_balance_before_transaction=self.update_and_get_balance(),)
 
     def _get_slippage_price(self, theoretical_price: float, slippage_percent: int, symbol: str) -> float:
         # todo: see https://github.com/AlgoETS/BullETS/issues/46

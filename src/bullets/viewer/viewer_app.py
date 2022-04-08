@@ -78,7 +78,7 @@ def SummaryGraph():
         st.markdown("---")
 
         #TODO: Insert the actual graph summary
-        st.plotly_chart(cash_balance_chart(df_transac))
+        st.plotly_chart(summary_graph(df_transac))
 
 def Compare():
     st.markdown("Not yet implemented")

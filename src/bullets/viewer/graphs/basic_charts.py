@@ -9,6 +9,26 @@ def candle_chart(df):
                                          close=df['Close'])])
     return fig
 
-def cash_balance_chart(df):
-    fig = px.line(df, x='timestamp', y="cash_balance", title='Cash Balance evolution')
+def summary_graph(df):
+    fig = px.line(df, x='timestamp', y=df.columns[[6,10,13,14]], title='Summary Graph')
+    #fig.append_trace(px.Line(df,x='timestamp'))
+    fig.update_layout(
+        xaxis=dict(
+            rangeselector=dict(
+                buttons=list([
+                    dict(count=1,
+                         label="1m",
+                         step="month",
+                         stepmode="backward"),
+                ])
+            ),
+            rangeslider=dict(
+                visible=True
+            ),
+            type="date"
+        )
+    )
     return fig
+
+
+
